@@ -4,12 +4,31 @@
 
 This document outlines the Redis data structure design for a chat application supporting:
 
+- **Spaces**: Container for multiple rooms (e.g., "Khoa Toán", "Khoa Lý")
+- **Rooms**: Individual chat rooms within a space (e.g., "Toán cao cấp", "Giải tích 1")
 - **Direct Messages (DM)**: 1-on-1 conversations
-- **Space/Room Messages**: Group conversations in spaces
+- **Messages**: Chat messages within each room
 - **Reactions**: Emoji reactions to messages
 - **Reply**: Threaded replies to messages
 - **Edit**: Message editing with history
 - **@Mentions**: Tagging users in messages
+
+### Hierarchy
+
+```
+Space
+├── Room 1 (e.g., "general")
+│   ├── Message 1
+│   ├── Message 2
+│   └── ...
+├── Room 2 (e.g., "toan-cao-cap")
+│   ├── Message 1
+│   └── ...
+└── Room N
+Direct Messages (separate from Space)
+├── DM with User A
+└── DM with User B
+```
 
 ---
 
@@ -21,8 +40,9 @@ This document outlines the Redis data structure design for a chat application su
 
 Prefixes:
 
+- `space:` - Spaces (containers)
+- `room:` - Rooms within spaces
 - `msg:` - Messages
-- `room:` - Rooms/Spaces
 - `dm:` - Direct messages
 - `user:` - User data
 - `react:` - Reactions
@@ -39,11 +59,13 @@ Each message stored as a Redis Hash:
 ```
 msg:{messageId}
   ├── id: "12345"
-  ├── roomId: "toan-cao-cap" or "dm:minh:you"
+  ├── roomId: "toan-cao-cap"
+  ├── spaceId: "khoa-toan" (null for DM messages)
   ├── roomType: "space" | "dm"
   ├── senderId: "user123"
   ├── senderName: "Minh"
-  ├── content: "Hello @Linh, check this out!"
+  ├── content: "Hello @Linh, check this out!" (raw text with @mentions)
+  ├── mentions: JSON string of parsed mentions [{userId, username, position}]
   ├── timestamp: 1712345678000 (Unix ms)
   ├── edited: "false" | "true"
   ├── editHistory: JSON string of edits
@@ -51,6 +73,40 @@ msg:{messageId}
   ├── pinned: "false" | "true"
   ├── deleted: "false" | "true"
   └── attachment: JSON string if has attachment
+```
+
+### Mentions Parsing
+
+The `mentions` field stores parsed mention data to distinguish between @tags and plain text:
+
+```json
+[
+  { "userId": "user456", "username": "Linh", "position": 6 },
+  { "userId": "user789", "username": "Huy", "position": 25 }
+]
+```
+
+**Example:**
+
+Message content: `"Hello @Linh, check @Huy's work"`
+
+- `content`: Raw text as displayed (includes @Linh, @Huy as text)
+- `mentions`: Parsed array linking @Linh → user456, @Huy → user789
+
+This allows:
+
+- Rendering @mentions as clickable links in UI
+- Distinguishing @email.com (not a mention) from @Linh (actual mention)
+- Quick lookup of who was mentioned without parsing content
+
+### Message with spaceId Example
+
+```
+HSET msg:12345 id "12345"
+HSET msg:12345 roomId "toan-cao-cap"
+HSET msg:12345 spaceId "khoa-toan"
+HSET msg:12345 content "Hello @Linh, check this out!"
+HSET msg:12345 mentions '[{"userId":"user456","username":"Linh","position":6}]'
 ```
 
 ### Message Lists (Sorted Sets for ordering)
@@ -78,22 +134,97 @@ ZADD dm:messages:dm:minh:you 1712345678000 msg:12345
 
 ---
 
-## 2. Room/Space Storage
+## 2. Space Storage
+
+### Space Hash
+
+Each Space is a container that holds multiple rooms:
+
+```
+space:{spaceId}
+  ├── id: "khoa-toan"
+  ├── name: "Khoa Toán"
+  ├── description: "Khoa Toán - Trường Đại học XYZ"
+  ├── avatar: "https://..."
+  ├── createdAt: 1712345678000
+  ├── createdBy: "user123"
+  ├── roomCount: 5
+  ├── memberCount: 150
+  └── lastActivity: 1712345678000
+```
+
+### Space Rooms List (Set)
+
+Rooms belonging to a space:
+
+```
+space:rooms:{spaceId}
+  ├── member: roomId (e.g., "general", "toan-cao-cap", "giai-tich-1")
+```
+
+**Example:**
+
+```
+SADD space:rooms:khoa-toan general
+SADD space:rooms:khoa-toan toan-cao-cap
+SADD space:rooms:khoa-toan giai-tich-1
+```
+
+### Space Members (Set)
+
+Users who are members of the space (can access all rooms):
+
+```
+space:members:{spaceId}
+  ├── member: userId
+```
+
+### Space Rooms Metadata (Hash)
+
+Quick lookup for room info within space:
+
+```
+space:roominfo:{spaceId}:{roomId}
+  ├── name: "Toán cao cấp"
+  ├── description: "Phòng thảo luận Toán cao cấp"
+  ├── createdAt: 1712345678000
+  ├── memberCount: 45
+  └── lastMessageAt: 1712345678000
+```
+
+### User's Spaces List (Sorted Set)
+
+Spaces a user belongs to, sorted by last activity:
+
+```
+user:spaces:{userId}
+  ├── member: spaceId, score: lastActivity
+```
+
+---
+
+## 3. Room Storage
 
 ### Room Hash
+
+Each Room belongs to a Space and contains messages:
 
 ```
 room:{roomId}
   ├── id: "toan-cao-cap"
   ├── name: "Toán cao cấp"
-  ├── type: "space" | "dm"
-  ├── spaceId: "space123" (if belongs to a space)
+  ├── spaceId: "khoa-toan"
+  ├── description: "Phòng thảo luận Toán cao cấp"
   ├── createdAt: 1712345678000
-  ├── memberCount: 25
+  ├── createdBy: "user123"
+  ├── memberCount: 45
+  ├── messageCount: 1523
   └── lastActivity: 1712345678000
 ```
 
 ### Room Members (Set)
+
+Users who can access this room:
 
 ```
 room:members:{roomId}
@@ -106,9 +237,16 @@ room:members:{roomId}
 room:msgcount:{roomId} = 1523
 ```
 
+### Room Pinned Messages (Set)
+
+```
+room:pinned:{roomId}
+  ├── member: messageId
+```
+
 ---
 
-## 3. Direct Message Storage
+## 4. Direct Message Storage
 
 ### DM Room ID Generation
 
@@ -138,7 +276,7 @@ user:dms:{userId}
 
 ---
 
-## 4. Reactions Storage
+## 5. Reactions Storage
 
 ### Message Reactions (Hash)
 
@@ -165,7 +303,7 @@ SADD user:reactions:user1 "12345:👍"
 
 ---
 
-## 5. Reply/Thread Storage
+## 6. Reply/Thread Storage
 
 ### Reply Index
 
@@ -182,7 +320,7 @@ msg:replycount:{messageId} = 5
 
 ---
 
-## 6. Edit History Storage
+## 7. Edit History Storage
 
 ### Edit History (List)
 
@@ -200,7 +338,7 @@ LPUSH msg:edithistory:12345 '{"content":"Edited text","editedAt":1712345678000,"
 
 ---
 
-## 7. @Mentions Storage
+## 8. @Mentions Storage
 
 ### Message Mentions (Set)
 
@@ -232,7 +370,7 @@ INCR user:mentioncount:user456
 
 ---
 
-## 8. Unread Count Storage
+## 9. Unread Count Storage
 
 ### User's Unread per Room
 
@@ -248,18 +386,13 @@ user:unreadtotal:{userId} = 23
 
 ---
 
-## 9. Pinned Messages
+## 10. Pinned Messages
 
-### Room Pinned Messages (Set)
-
-```
-room:pinned:{roomId}
-  ├── member: messageId
-```
+(Moved to Room Storage section - `room:pinned:{roomId}`)
 
 ---
 
-## 10. User Online Status
+## 11. User Online Status
 
 ### User Status (Hash)
 
@@ -279,22 +412,101 @@ users:online
 
 ---
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph User
+        U[User belongs to multiple Spaces]
+    end
+
+    subgraph Space_khoa_toan[Space: Khoa Toán]
+        ST[space:khoa-toan]
+        R1[Room: general]
+        R2[Room: toan-cao-cap]
+        R3[Room: giai-tich-1]
+    end
+
+    subgraph Space_khoa_ly[Space: Khoa Lý]
+        SL[space:khoa-ly]
+        R4[Room: general]
+        R5[Room: co-hoc]
+    end
+
+    subgraph Messages_R2[Room: toan-cao-cap]
+        M1[msg:1]
+        M2[msg:2]
+        M3[msg:3]
+    end
+
+    subgraph Direct_Messages
+        DM1[dm:user1:user2]
+        DM2[dm:user1:user3]
+    end
+
+    U -->|member of| ST
+    U -->|member of| SL
+
+    ST -->|contains| R1
+    ST -->|contains| R2
+    ST -->|contains| R3
+
+    SL -->|contains| R4
+    SL -->|contains| R5
+
+    R2 -->|messages| M1
+    R2 -->|messages| M2
+    R2 -->|messages| M3
+
+    U -->|has DMs| DM1
+    U -->|has DMs| DM2
+```
+
+---
+
 ## Data Flow Examples
 
-### Sending a Message
+### Creating a Space with Rooms
+
+```
+1. Create Space
+   - HSET space:{spaceId} {fields}
+   - SADD user:spaces:{userId} {spaceId}
+
+2. Add Rooms to Space
+   - SADD space:rooms:{spaceId} general
+   - SADD space:rooms:{spaceId} toan-cao-cap
+   - HSET room:general {fields with spaceId}
+   - HSET room:toan-cao-cap {fields with spaceId}
+
+3. Add Members to Space
+   - SADD space:members:{spaceId} {userId}
+
+4. Add Members to each Room
+   - SADD room:members:general {userId}
+   - SADD room:members:toan-cao-cap {userId}
+```
+
+### Sending a Message in a Room
 
 ```
 1. Generate messageId
 2. HSET msg:{messageId} {fields}
+   - roomId: "toan-cao-cap"
+   - spaceId: "khoa-toan"
 3. ZADD room:messages:{roomId} {timestamp} {messageId}
 4. If has mentions:
    - SADD mention:msg:{messageId} {mentionedUserIds}
    - ZADD user:mentions:{userId} {timestamp} {messageId}
 5. If reply:
-   - SADD msg:replies:{replyToId} {messageId}
+   - ZADD msg:replies:{replyToId} {timestamp} {messageId}
 6. Update room last activity
-7. Increment unread counts for other members
-8. Publish to Redis Pub/Sub for real-time
+   - HSET room:{roomId} lastActivity {timestamp}
+7. Update space last activity
+   - HSET space:{spaceId} lastActivity {timestamp}
+8. Increment unread counts for other room members
+9. Publish to Redis Pub/Sub for real-time
+   - PUBLISH channel:room:{roomId} message:new
 ```
 
 ### Adding a Reaction
@@ -394,14 +606,16 @@ EXPIRE user:mentions:{userId} 604800  # 7 days (keep recent)
 ## Example: Complete Message Object in Redis
 
 ```
-# Message Hash
+# Message Hash (with spaceId and parsed mentions)
 HSETALL msg:1712345678001 {
   "id": "1712345678001",
   "roomId": "toan-cao-cap",
+  "spaceId": "khoa-toan",
   "roomType": "space",
   "senderId": "user123",
   "senderName": "Minh",
   "content": "Cho mình hỏi thêm: tích phân của sin(x) từ 0 đến π bằng bao nhiêu? @Linh @Huy giúp mình với",
+  "mentions": "[{\"userId\":\"user456\",\"username\":\"Linh\",\"position\":78},{\"userId\":\"user789\",\"username\":\"Huy\",\"position\":84}]",
   "timestamp": 1712345678001,
   "edited": "false",
   "replyTo": "1712345678000",
@@ -415,14 +629,39 @@ HSETALL react:msg:1712345678001 {
   "❤️": "{\"count\":1,\"users\":[\"user456\"]}"
 }
 
-# Mentions
+# Mentions Index (for notifications - separate from parsed mentions in message)
 SADD mention:msg:1712345678001 user456 user789
+ZADD user:mentions:user456 1712345678001 msg:1712345678001
+ZADD user:mentions:user789 1712345678001 msg:1712345678001
 
 # Add to room messages
 ZADD room:messages:toan-cao-cap 1712345678001 msg:1712345678001
 
 # Add to reply thread
-SADD msg:replies:1712345678000 1712345678001
+ZADD msg:replies:1712345678000 1712345678001 msg:1712345678001
+```
+
+### How Mentions Work
+
+1. **In Message Hash (`mentions` field)**: Stores parsed mention data as JSON
+   - Used for rendering @mentions as clickable links in UI
+   - Distinguishes @Linh (mention) from @gmail.com (not a mention)
+
+2. **In Mentions Index (`mention:msg:{id}`, `user:mentions:{userId}`)**: Used for notifications
+   - Quick lookup of who was mentioned
+   - Track unread mentions per user
+
+```
+# Example: Parsing mentions from content
+Content: "Contact me at test@email.com or @Linh for help"
+
+Parsed mentions:
+[
+  { "userId": "user456", "username": "Linh", "position": 37 }
+]
+
+# @email.com is NOT a mention (no @ symbol followed by username pattern)
+# @Linh IS a mention (matches @username pattern)
 ```
 
 ---
@@ -448,14 +687,19 @@ SADD msg:replies:1712345678000 1712345678001
 
 ## Summary Table
 
-| Feature   | Redis Structure   | Key Pattern                                  |
-| --------- | ----------------- | -------------------------------------------- |
-| Messages  | Hash + Sorted Set | `msg:{id}`, `room:messages:{roomId}`         |
-| DM        | Hash + Sorted Set | `dm:{id}`, `dm:messages:{dmId}`              |
-| Reactions | Hash + Set        | `react:msg:{id}`, `user:reactions:{userId}`  |
-| Reply     | Set               | `msg:replies:{parentId}`                     |
-| Edit      | List              | `msg:edithistory:{id}`                       |
-| @Mentions | Set + Sorted Set  | `mention:msg:{id}`, `user:mentions:{userId}` |
-| Unread    | String            | `user:unread:{userId}:{roomId}`              |
-| Online    | Set + Hash        | `users:online`, `user:status:{id}`           |
-| Pinned    | Set               | `room:pinned:{roomId}`                       |
+| Feature       | Redis Structure   | Key Pattern                                  | Notes                                    |
+| ------------- | ----------------- | -------------------------------------------- | ---------------------------------------- |
+| Spaces        | Hash + Set        | `space:{id}`, `space:rooms:{spaceId}`        | Container for multiple rooms             |
+| Space Members | Set               | `space:members:{spaceId}`                    | Users in the space                       |
+| User Spaces   | Sorted Set        | `user:spaces:{userId}`                       | Spaces user belongs to                   |
+| Rooms         | Hash + Set        | `room:{id}`, `room:members:{roomId}`         | Each room belongs to a space             |
+| Room Messages | Sorted Set        | `room:messages:{roomId}`                     | Messages in a room, ordered by timestamp |
+| Messages      | Hash              | `msg:{id}`                                   | Includes spaceId, mentions JSON          |
+| DM            | Hash + Sorted Set | `dm:{id}`, `dm:messages:{dmId}`              | Direct messages (no spaceId)             |
+| Reactions     | Hash + Set        | `react:msg:{id}`, `user:reactions:{userId}`  | Emoji reactions per message              |
+| Reply         | Sorted Set        | `msg:replies:{parentId}`                     | Thread replies                           |
+| Edit          | List              | `msg:edithistory:{id}`                       | Message edit history                     |
+| @Mentions     | Set + Sorted Set  | `mention:msg:{id}`, `user:mentions:{userId}` | Notifications for mentions               |
+| Unread        | String            | `user:unread:{userId}:{roomId}`              | Unread count per room                    |
+| Online        | Set + Hash        | `users:online`, `user:status:{id}`           | User online status                       |
+| Pinned        | Set               | `room:pinned:{roomId}`                       | Pinned messages per room                 |

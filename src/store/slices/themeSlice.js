@@ -3,9 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 const getInitialTheme = () => {
   if (typeof window !== "undefined") {
     const saved = localStorage.getItem("theme");
-    return saved === "dark";
+    return saved ? saved === "dark" : true; // default to dark mode
   }
-  return false;
+  return true; // default to dark mode for SSR
 };
 
 const initialState = {
