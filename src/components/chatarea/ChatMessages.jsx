@@ -7,6 +7,7 @@ import {
   FiEdit2,
 } from "react-icons/fi";
 import { UserProfilePopup } from "../memberlist/index.js";
+import { dmUsers } from "../../data/mockData.js";
 
 // Predefined color palette for usernames (like Discord/Telegram)
 // Bright colors visible in both dark and light mode
@@ -31,6 +32,71 @@ const usernameColors = [
 
 const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
+// Helper function to render message content with @ mentions as styled tags
+function renderMessageWithMentions(content, isDark, onShowProfile) {
+  if (!content) return content;
+
+  // Regex to match @username patterns (only letters, numbers, underscores - no spaces)
+  const mentionRegex = /@([a-zA-Z0-9À-ỹ_]+)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  // Create a map of user names to their data for quick lookup
+  const userMap = {};
+  dmUsers.forEach((user) => {
+    userMap[user.name.toLowerCase()] = user;
+  });
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    // Add text before the mention
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={`text-${lastIndex}`}>
+          {content.substring(lastIndex, match.index)}
+        </span>,
+      );
+    }
+
+    // Extract the mentioned name
+    const mentionedName = match[1].trim();
+    const userData = userMap[mentionedName.toLowerCase()];
+
+    // Get color for the mentioned user
+    const mentionColor = userData ? getUserColor(userData.name) : "#74c0fc";
+
+    // Render the mention as colored text
+    parts.push(
+      <span
+        key={`mention-${match.index}`}
+        className="font-semibold cursor-pointer"
+        style={{
+          color: mentionColor,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (userData && onShowProfile) {
+            onShowProfile(userData.name);
+          }
+        }}
+      >
+        @{mentionedName}
+      </span>,
+    );
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < content.length) {
+    parts.push(
+      <span key={`text-end-${lastIndex}`}>{content.substring(lastIndex)}</span>,
+    );
+  }
+
+  return parts.length > 0 ? parts : content;
+}
+
 // Generate a consistent color for each username
 function getUserColor(name) {
   // Check if user has set a custom color for "You"
@@ -54,18 +120,23 @@ function ReplyPreview({ replyTo, isDark }) {
 
   return (
     <div
-      className="flex items-center gap-2 mb-1 px-1 py-0.5 rounded text-xs border-l-2"
+      className="mb-2 px-2 py-1.5 rounded-md text-xs border-l-2 flex items-center gap-2"
       style={{
         borderColor: replyColor,
         background: isDark ? "var(--bg-surface-tertiary)" : "#f0f2f5",
-        color: "var(--text-secondary)",
       }}
     >
-      <FiCornerDownRight size={12} style={{ color: replyColor }} />
-      <span style={{ color: replyColor, fontWeight: "600" }}>
+      {/* Single line: icon + name + content */}
+      <FiCornerDownRight
+        size={12}
+        style={{ color: replyColor, flexShrink: 0 }}
+      />
+      <span style={{ color: replyColor, fontWeight: "600", flexShrink: 0 }}>
         {replyTo.sender}
       </span>
-      <span className="truncate">{replyTo.content}</span>
+      <span className="truncate" style={{ color: "var(--text-secondary)" }}>
+        {replyTo.content}
+      </span>
     </div>
   );
 }
@@ -229,7 +300,7 @@ function ChatMessage({ msg, isDark, onReply, onEdit, onShowProfile }) {
         {msg.avatar}
       </div>
       <div className="flex-1 min-w-0">
-        <ReplyPreview replyTo={msg.replyTo} isDark={isDark} />
+        {/* Sender name and timestamp first */}
         <div className="flex items-baseline gap-2 mb-1">
           <span
             className="text-[13px] font-semibold cursor-pointer hover:underline"
@@ -255,11 +326,14 @@ function ChatMessage({ msg, isDark, onReply, onEdit, onShowProfile }) {
             {msg.timestamp}
           </span>
         </div>
+        {/* Reply preview below sender info */}
+        <ReplyPreview replyTo={msg.replyTo} isDark={isDark} />
+        {/* Message content */}
         <div
           className="text-sm leading-relaxed"
           style={{ color: "var(--text-primary)" }}
         >
-          {msg.content}
+          {renderMessageWithMentions(msg.content, isDark, onShowProfile)}
           {msg.isEdited && (
             <span
               className="ml-1 text-[10px] italic"

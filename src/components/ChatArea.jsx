@@ -11,6 +11,7 @@ import {
   setSelectedUser,
   clearSelectedUser,
 } from "../store/slices/chatSlice";
+import { addMessage } from "../store/slices/messageSlice";
 
 function ChatArea({ activeView, activeRoom }) {
   const dispatch = useDispatch();
@@ -26,7 +27,12 @@ function ChatArea({ activeView, activeRoom }) {
   const isBotRoom = room === "tro-ly-ai";
   const isDM = dmUsers.some((dm) => dm.id === room);
 
-  const chatMessages = isDM ? directMessages[room] || [] : messages[room] || [];
+  // Get mock messages and user-sent messages
+  const mockMessages = isDM ? directMessages[room] || [] : messages[room] || [];
+  const userMessages = useSelector(
+    (state) => state.message.userMessages[room] || [],
+  );
+  const chatMessages = [...mockMessages, ...userMessages];
 
   const placeholder =
     isBotRoom || (isDM && room === "studybot-dm")
@@ -103,6 +109,21 @@ function ChatArea({ activeView, activeRoom }) {
         onCancelReply={() => dispatch(cancelReply())}
         editMessage={editMessage}
         onCancelEdit={() => dispatch(cancelEdit())}
+        onSend={(content, replyToMsg) => {
+          const newMessage = {
+            id: Date.now(),
+            sender: "You",
+            avatar: "Y",
+            timestamp: new Date().toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            content,
+            isPinned: false,
+            replyTo: replyToMsg || null,
+          };
+          dispatch(addMessage({ roomId: room, message: newMessage }));
+        }}
       />
     </div>
   );

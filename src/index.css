@@ -25,3 +25,33 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Chat input placeholder */
+.chat-input-wrapper {
+  position: relative;
+}
+
+.chat-input-placeholder {
+  position: absolute;
+  left: 2.75rem; /* 1rem padding + 0.75rem gap + button width */
+  right: 6rem; /* paperclip + send buttons */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.875rem;
+  font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-input-placeholder.hidden {
+  display: none;
+}
+
+/* Mention tag styling in input */
+.mention-tag {
+  display: inline;
+  user-select: none;
+}
