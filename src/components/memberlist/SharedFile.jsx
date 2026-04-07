@@ -1,6 +1,28 @@
-import { FiFileText } from "react-icons/fi";
+import { FiFileText, FiImage, FiFile } from "react-icons/fi";
 
-function SharedFile({ isDark, fileName, time }) {
+function SharedFile({ isDark, fileName, time, type }) {
+  // Get icon based on file type
+  const getIcon = () => {
+    if (type === "image") {
+      return <FiImage size={12} />;
+    }
+    if (type === "pdf") {
+      return <FiFile size={12} />;
+    }
+    return <FiFileText size={12} />;
+  };
+
+  // Get icon color based on type
+  const getIconColor = () => {
+    if (type === "pdf") {
+      return "#ef4444";
+    }
+    if (type === "image") {
+      return "#10b981";
+    }
+    return "var(--primary)";
+  };
+
   return (
     <div
       className="flex items-center gap-2 p-2 rounded-md cursor-pointer"
@@ -13,10 +35,10 @@ function SharedFile({ isDark, fileName, time }) {
         className="w-7 h-7 rounded-md flex items-center justify-center text-xs flex-shrink-0"
         style={{
           background: "var(--primary-active)",
-          color: "var(--primary)",
+          color: getIconColor(),
         }}
       >
-        <FiFileText size={12} />
+        {getIcon()}
       </div>
       <div className="flex-1 min-w-0">
         <div

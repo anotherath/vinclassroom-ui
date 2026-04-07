@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+import "./App.css";
 import Sidebar from "./components/Sidebar";
 import RoomList from "./components/RoomList";
 import ChatArea from "./components/ChatArea";

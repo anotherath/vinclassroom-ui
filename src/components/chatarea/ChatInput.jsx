@@ -2,36 +2,23 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { FiX, FiPaperclip } from "react-icons/fi";
 import { IoSend } from "react-icons/io5";
 import MentionSuggestions from "./MentionSuggestions";
+import FileAttachmentPreview from "./FileAttachmentPreview";
 import { dmUsers } from "../../data/mockData";
+import { getUserColor } from "../../utils/userColor";
 
-// Get color for a user (same as ChatMessages)
-const usernameColors = [
-  "#ff6b6b",
-  "#ffa94d",
-  "#ffd43b",
-  "#69db7c",
-  "#38d9a9",
-  "#74c0fc",
-  "#b197fc",
-  "#f783ac",
-  "#66d9e8",
-  "#e599f7",
-  "#9775fa",
-  "#8ce99a",
-  "#ffe066",
-  "#a5d8ff",
-  "#c4b5fd",
-  "#ff8787",
+// Allowed file types
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
 ];
 
-function getUserColor(name) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % usernameColors.length;
-  return usernameColors[index];
-}
+// Max file size: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function ChatInput({
   isDark,
@@ -47,10 +34,12 @@ function ChatInput({
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionStartOffset, setMentionStartOffset] = useState(-1);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
-  const [mentions, setMentions] = useState([]); // Track inserted mentions for deletion
+  const [mentions, setMentions] = useState([]);
   const [isEmpty, setIsEmpty] = useState(true);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const editorRef = useRef(null);
   const containerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const placeholderText = editMessage
     ? "Chỉnh sửa tin nhắn..."
@@ -74,7 +63,6 @@ function ChatInput({
     setShowMentions(false);
   }, [editMessage]);
 
-  // Close mentions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -85,7 +73,6 @@ function ChatInput({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Get plain text from contentEditable
   const getPlainText = useCallback(() => {
     if (editorRef.current) {
       return editorRef.current.innerText || "";
@@ -93,7 +80,6 @@ function ChatInput({
     return "";
   }, []);
 
-  // Get cursor position as text offset
   const getCursorOffset = useCallback(() => {
     const selection = window.getSelection();
     if (!selection.rangeCount) return 0;
@@ -105,7 +91,6 @@ function ChatInput({
     return preCaretRange.toString().length;
   }, []);
 
-  // Check for @ mention pattern
   const checkForMention = useCallback(() => {
     const cursorOffset = getCursorOffset();
     const plainText = getPlainText();
@@ -125,7 +110,6 @@ function ChatInput({
 
   const handleInput = (e) => {
     checkForMention();
-    // Update empty state for placeholder visibility
     const plainText = getPlainText();
     setIsEmpty(plainText.trim() === "");
   };
@@ -136,77 +120,71 @@ function ChatInput({
       return;
     }
 
-    // Remove the @filter text and insert colored mention
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
 
-    const range = selection.getRangeAt(0);
     const plainText = getPlainText();
     const cursorOffset = getCursorOffset();
 
-    // Calculate where the @ starts
     const textBeforeCursor = plainText.substring(0, cursorOffset);
     const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9À-ỹ_]*)$/);
     if (!mentionMatch) return;
 
     const atPosition = cursorOffset - mentionMatch[0].length;
-
-    // Create a text node for the part before @
     const beforeText = plainText.substring(0, atPosition);
+    const afterText = plainText.substring(cursorOffset);
 
-    // Create the mention span
     const mentionColor = getUserColor(user.name);
     const mentionSpan = document.createElement("span");
     mentionSpan.className = "mention-tag";
     mentionSpan.contentEditable = "false";
     mentionSpan.style.cssText = `color: ${mentionColor}; font-weight: 600; cursor: pointer;`;
-    mentionSpan.textContent = `@${user.name} `;
+    mentionSpan.textContent = `@${user.name}`;
     mentionSpan.dataset.userId = user.id;
     mentionSpan.dataset.userName = user.name;
 
-    // Clear the editor and rebuild
+    // Rebuild editor content
     editorRef.current.innerHTML = "";
 
-    // Add text before mention
     if (beforeText) {
       editorRef.current.appendChild(document.createTextNode(beforeText));
     }
 
-    // Add mention
     editorRef.current.appendChild(mentionSpan);
 
-    // Add remaining text after cursor
-    const afterText = plainText.substring(cursorOffset);
+    // Add a zero-width space followed by regular space after the mention
+    // This ensures the cursor can be placed after the mention
+    const spaceNode = document.createTextNode("\u200B ");
+    editorRef.current.appendChild(spaceNode);
+
     if (afterText) {
       editorRef.current.appendChild(document.createTextNode(afterText));
     }
 
-    // Track this mention for deletion
     setMentions((prev) => [...prev, { id: user.id, name: user.name }]);
 
-    // Move cursor after the mention
-    const newRange = document.createRange();
-    newRange.setStartAfter(mentionSpan);
-    newRange.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(newRange);
+    // Focus editor and set cursor after the zero-width space + space
+    editorRef.current.focus();
+
+    // Place cursor at position 2 (after zero-width space and regular space)
+    selection.collapse(spaceNode, 2);
 
     setShowMentions(false);
-    editorRef.current.focus();
   };
 
   const handleSend = () => {
     const content = getPlainText().trim();
-    if (content) {
+    if (content || selectedFiles.length > 0) {
       if (editMessage && onEdit) {
         onEdit(editMessage.id, content);
         if (onCancelEdit) onCancelEdit();
       } else if (onSend) {
-        onSend(content, replyTo);
+        onSend(content, replyTo, selectedFiles);
         if (editorRef.current) {
           editorRef.current.innerHTML = "";
         }
         setMentions([]);
+        setSelectedFiles([]);
         setIsEmpty(true);
         if (onCancelReply) onCancelReply();
       }
@@ -214,8 +192,71 @@ function ChatInput({
     }
   };
 
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = [];
+
+    files.forEach((file) => {
+      // Check file type
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        alert(
+          `File "${file.name}" có định dạng không được hỗ trợ. Chỉ chấp nhận file PDF và hình ảnh.`,
+        );
+        return;
+      }
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" vượt quá kích thước tối đa (10MB).`);
+        return;
+      }
+
+      // Create preview for images
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          validFiles.push({
+            file,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            preview: e.target.result,
+          });
+          setSelectedFiles((prev) => [...prev, validFiles.pop()]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        validFiles.push({
+          file,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          preview: null,
+        });
+        setSelectedFiles((prev) => [...prev, validFiles.pop()]);
+      }
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Remove selected file
+  const handleRemoveFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Trigger file input click
+  const handleAttachmentClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   const handleKeyDown = (e) => {
-    // Handle mention navigation when popup is open
     if (showMentions) {
       const filteredUsers = dmUsers.filter((user) =>
         user.name.toLowerCase().includes(mentionFilter.toLowerCase()),
@@ -254,13 +295,11 @@ function ChatInput({
       }
     }
 
-    // Handle Enter to send message (only if not selecting a mention)
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
 
-    // Handle backspace to delete entire mention
     if (e.key === "Backspace") {
       const selection = window.getSelection();
       if (!selection.rangeCount) return;
@@ -268,7 +307,6 @@ function ChatInput({
       const range = selection.getRangeAt(0);
       const cursorOffset = getCursorOffset();
 
-      // Check if cursor is right after a mention
       if (cursorOffset > 0 && range.startOffset === 0) {
         const prevNode = range.startContainer.previousSibling;
         if (
@@ -285,13 +323,11 @@ function ChatInput({
         }
       }
 
-      // Check if we're deleting into a mention from within text
       if (cursorOffset > 0) {
         const plainText = getPlainText();
         const charBeforeCursor = plainText[cursorOffset - 1];
 
         if (charBeforeCursor === " ") {
-          // Check if there's a mention before the space
           const textBeforeSpace = plainText.substring(0, cursorOffset - 1);
           const lastAtPos = textBeforeSpace.lastIndexOf("@");
           if (lastAtPos >= 0) {
@@ -303,7 +339,6 @@ function ChatInput({
             );
             if (mentionedUser) {
               e.preventDefault();
-              // Remove the mention and the space
               const beforeMention = plainText.substring(0, lastAtPos);
               const afterMention = plainText.substring(cursorOffset);
               editorRef.current.innerHTML = "";
@@ -317,7 +352,6 @@ function ChatInput({
                   document.createTextNode(afterMention),
                 );
               }
-              // Set cursor position
               const newRange = document.createRange();
               const textNode = editorRef.current.lastChild || editorRef.current;
               newRange.setStart(textNode, beforeMention.length);
@@ -338,7 +372,7 @@ function ChatInput({
   return (
     <div
       ref={containerRef}
-      className="px-4 py-3 border-t flex-shrink-0 relative"
+      className="px-4 py-3 border-t shrink-0 relative"
       style={{
         borderColor: "var(--border-primary)",
         background: "var(--bg-surface-secondary)",
@@ -364,7 +398,7 @@ function ChatInput({
             </span>
           </div>
           <button
-            className="ml-2 flex-shrink-0 p-0.5 rounded hover:bg-opacity-20"
+            className="ml-2 shrink-0 p-0.5 rounded hover:bg-opacity-20"
             style={{ color: "var(--text-secondary)" }}
             onClick={onCancelEdit}
           >
@@ -392,7 +426,7 @@ function ChatInput({
             </span>
           </div>
           <button
-            className="ml-2 flex-shrink-0 p-0.5 rounded hover:bg-opacity-20"
+            className="ml-2 shrink-0 p-0.5 rounded hover:bg-opacity-20"
             style={{ color: "var(--text-secondary)" }}
             onClick={onCancelReply}
           >
@@ -401,7 +435,15 @@ function ChatInput({
         </div>
       )}
 
-      {/* Mention Suggestions Popup */}
+      {/* File attachment preview */}
+      {selectedFiles.length > 0 && (
+        <FileAttachmentPreview
+          files={selectedFiles}
+          onRemove={handleRemoveFile}
+          isDark={isDark}
+        />
+      )}
+
       {showMentions && (
         <div
           className="absolute bottom-full left-4 right-4 mb-2 rounded-lg shadow-lg border overflow-hidden z-50"
@@ -430,20 +472,28 @@ function ChatInput({
           (e.currentTarget.style.borderColor = "var(--input-border)")
         }
       >
-        {/* Placeholder element */}
         <div className={`chat-input-placeholder ${isEmpty ? "" : "hidden"}`}>
           {placeholderText}
         </div>
         <div
           ref={editorRef}
           contentEditable
-          className="flex-1 border-none bg-transparent px-3 py-2 text-sm outline-none font-sans min-h-[36px] max-h-32 overflow-y-auto relative z-10"
+          className="flex-1 border-none bg-transparent px-3 py-2 text-sm outline-none font-sans min-h-9 max-h-32 overflow-y-auto relative z-10"
           style={{
             color: "var(--input-text)",
           }}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           suppressContentEditableWarning
+        />
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
         />
         <button
           type="button"
@@ -458,7 +508,8 @@ function ChatInput({
           onMouseLeave={(e) =>
             (e.currentTarget.style.background = "transparent")
           }
-          title="Đính kèm file"
+          onClick={handleAttachmentClick}
+          title="Đính kèm file (PDF, hình ảnh)"
         >
           <FiPaperclip size={18} />
         </button>

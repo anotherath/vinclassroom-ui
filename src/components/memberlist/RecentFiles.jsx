@@ -19,6 +19,7 @@ function RecentFiles({ isDark }) {
           isDark={isDark}
           fileName={file.name}
           time={`${file.sharedBy} · ${file.date}`}
+          type={file.type}
         />
       ))}
     </div>

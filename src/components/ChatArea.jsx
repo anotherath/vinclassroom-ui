@@ -109,7 +109,7 @@ function ChatArea({ activeView, activeRoom }) {
         onCancelReply={() => dispatch(cancelReply())}
         editMessage={editMessage}
         onCancelEdit={() => dispatch(cancelEdit())}
-        onSend={(content, replyToMsg) => {
+        onSend={(content, replyToMsg, files) => {
           const newMessage = {
             id: Date.now(),
             sender: "You",
@@ -122,6 +122,29 @@ function ChatArea({ activeView, activeRoom }) {
             isPinned: false,
             replyTo: replyToMsg || null,
           };
+
+          // Add attachment info if files are selected
+          if (files && files.length > 0) {
+            const firstFile = files[0];
+            newMessage.hasAttachment = true;
+            newMessage.attachmentName = firstFile.name;
+            newMessage.attachmentType = firstFile.type.startsWith("image/")
+              ? "image"
+              : firstFile.type === "application/pdf"
+                ? "pdf"
+                : "other";
+            newMessage.attachmentUrl = firstFile.preview || firstFile.name;
+            newMessage.attachments = files.map((f) => ({
+              name: f.name,
+              type: f.type.startsWith("image/")
+                ? "image"
+                : f.type === "application/pdf"
+                  ? "pdf"
+                  : "other",
+              url: f.preview || f.name,
+            }));
+          }
+
           dispatch(addMessage({ roomId: room, message: newMessage }));
         }}
       />

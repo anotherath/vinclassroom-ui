@@ -156,6 +156,15 @@ export const messages = {
       isPinned: false,
       hasAttachment: true,
       attachmentName: "dao_ham_tong_hop.pdf",
+      attachmentType: "pdf",
+      attachmentUrl: "/mock-files/dao_ham_tong_hop.pdf",
+      attachments: [
+        {
+          name: "dao_ham_tong_hop.pdf",
+          type: "pdf",
+          url: "/mock-files/dao_ham_tong_hop.pdf",
+        },
+      ],
       reactions: [
         { emoji: "🙏", count: 4, users: ["Minh", "Huy", "Tuan", "You"] },
       ],
@@ -219,6 +228,75 @@ export const messages = {
       content: "@Tuan Ok bạn! @Minh @Huy mọi người sắp xếp tham gia nhé 🎉",
       isPinned: false,
       reactions: [{ emoji: "🎉", count: 3, users: ["Minh", "Huy", "Tuan"] }],
+    },
+    {
+      id: 11,
+      sender: "Minh",
+      avatar: "M",
+      timestamp: "11:00",
+      content:
+        "Mình chụp ảnh bài giải bài tập đây, mọi người xem nhé @Linh @Huy",
+      isPinned: false,
+      hasAttachment: true,
+      attachmentName: "bai_giai_toan.jpg",
+      attachmentType: "image",
+      attachmentUrl:
+        "https://placehold.co/600x400/e2e8f0/475569?text=Bai+giai+toan",
+      attachments: [
+        {
+          name: "bai_giai_toan.jpg",
+          type: "image",
+          url: "https://placehold.co/600x400/e2e8f0/475569?text=Bai+giai+toan",
+        },
+      ],
+      reactions: [{ emoji: "👍", count: 2, users: ["Linh", "Huy"] }],
+    },
+    {
+      id: 12,
+      sender: "Huy",
+      avatar: "H",
+      timestamp: "11:05",
+      content: "Ảnh đẹp quá, cảm ơn @Minh nhé! Mình cũng gửi ảnh bài của mình",
+      isPinned: false,
+      hasAttachment: true,
+      attachmentName: "bai_giai_huy.png",
+      attachmentType: "image",
+      attachmentUrl:
+        "https://placehold.co/600x400/dbeafe/1e40af?text=Bai+giai+Huy",
+      replyTo: {
+        id: 11,
+        sender: "Minh",
+        timestamp: "11:00",
+        content: "Mình chụp ảnh bài giải bài tập đây",
+      },
+      attachments: [
+        {
+          name: "bai_giai_huy.png",
+          type: "image",
+          url: "https://placehold.co/600x400/dbeafe/1e40af?text=Bai+giai+Huy",
+        },
+      ],
+      reactions: [{ emoji: "❤️", count: 1, users: ["Minh"] }],
+    },
+    {
+      id: 13,
+      sender: "Tuan",
+      avatar: "T",
+      timestamp: "11:10",
+      content: "Mình gửi file tài liệu ôn tập nhé mọi người",
+      isPinned: false,
+      hasAttachment: true,
+      attachmentName: "on_tap_cuoi_ky.pdf",
+      attachmentType: "pdf",
+      attachmentUrl: "/mock-files/on_tap_cuoi_ky.pdf",
+      attachments: [
+        {
+          name: "on_tap_cuoi_ky.pdf",
+          type: "pdf",
+          url: "/mock-files/on_tap_cuoi_ky.pdf",
+        },
+      ],
+      reactions: [{ emoji: "🙏", count: 3, users: ["Minh", "Linh", "Huy"] }],
     },
   ],
   "tro-ly-ai": [
@@ -313,6 +391,27 @@ export const directMessages = {
       content: "Không có gì, cùng ôn thi nhé! @Minh @Linh đi chung không?",
       isPinned: false,
     },
+    {
+      id: 5,
+      sender: "Minh",
+      avatar: "M",
+      timestamp: "09:30",
+      content: "Đây là ảnh chụp đề cương ôn tập nè @You",
+      isPinned: false,
+      hasAttachment: true,
+      attachmentName: "de_cuong.jpg",
+      attachmentType: "image",
+      attachmentUrl:
+        "https://placehold.co/600x400/fef3c7/92400e?text=De+cuong+on+tap",
+      attachments: [
+        {
+          name: "de_cuong.jpg",
+          type: "image",
+          url: "https://placehold.co/600x400/fef3c7/92400e?text=De+cuong+on+tap",
+        },
+      ],
+      reactions: [{ emoji: "🙏", count: 1, users: ["You"] }],
+    },
   ],
   linh: [
     {
@@ -338,6 +437,27 @@ export const directMessages = {
       timestamp: "08:35",
       content: "Câu 5 khó quá, cậu giải giúp mình được không? @You @Minh",
       isPinned: false,
+    },
+    {
+      id: 4,
+      sender: "You",
+      avatar: "Y",
+      timestamp: "08:40",
+      content: "Đây là ảnh mình chụp lời giải câu 5 nè @Linh",
+      isPinned: false,
+      hasAttachment: true,
+      attachmentName: "loi_giai_cau5.png",
+      attachmentType: "image",
+      attachmentUrl:
+        "https://placehold.co/600x400/d1fae5/065f46?text=Loi+giai+cau+5",
+      attachments: [
+        {
+          name: "loi_giai_cau5.png",
+          type: "image",
+          url: "https://placehold.co/600x400/d1fae5/065f46?text=Loi+giai+cau+5",
+        },
+      ],
+      reactions: [{ emoji: "❤️", count: 1, users: ["Linh"] }],
     },
   ],
   tuan: [
@@ -426,9 +546,48 @@ export const members = [
 ];
 
 export const recentFiles = [
-  { id: 1, name: "dao_ham_tong_hop.pdf", sharedBy: "Linh", date: "10:36" },
-  { id: 2, name: "bai_giang_tuan1.pptx", sharedBy: "Minh", date: "Yesterday" },
-  { id: 3, name: "de_cuong_on_tap.docx", sharedBy: "Huy", date: "2 days ago" },
+  {
+    id: 1,
+    name: "dao_ham_tong_hop.pdf",
+    sharedBy: "Linh",
+    date: "10:36",
+    type: "pdf",
+  },
+  {
+    id: 2,
+    name: "bai_giai_toan.jpg",
+    sharedBy: "Minh",
+    date: "11:00",
+    type: "image",
+  },
+  {
+    id: 3,
+    name: "bai_giai_huy.png",
+    sharedBy: "Huy",
+    date: "11:05",
+    type: "image",
+  },
+  {
+    id: 4,
+    name: "on_tap_cuoi_ky.pdf",
+    sharedBy: "Tuan",
+    date: "11:10",
+    type: "pdf",
+  },
+  {
+    id: 5,
+    name: "bai_giang_tuan1.pptx",
+    sharedBy: "Minh",
+    date: "Yesterday",
+    type: "other",
+  },
+  {
+    id: 6,
+    name: "de_cuong_on_tap.docx",
+    sharedBy: "Huy",
+    date: "2 days ago",
+    type: "other",
+  },
 ];
 
 export const dmUsers = [
