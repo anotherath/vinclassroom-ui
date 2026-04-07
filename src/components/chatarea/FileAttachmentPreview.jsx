@@ -14,7 +14,7 @@ function FileAttachmentPreview({ files, onRemove, isDark }) {
 
   return (
     <div
-      className="file-attachment-preview flex flex-wrap gap-2 mb-2 px-3 py-2 rounded-lg text-sm"
+      className="flex flex-wrap gap-2 mb-2 px-3 py-2 rounded-lg text-sm"
       style={{
         background: isDark ? "var(--bg-surface-tertiary)" : "#f0f2f5",
         border: "1px solid var(--border-primary)",
@@ -30,7 +30,7 @@ function FileAttachmentPreview({ files, onRemove, isDark }) {
           }}
         >
           {file.type?.startsWith("image/") ? (
-            <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0">
+            <div className="relative w-10 h-10 rounded overflow-hidden shrink-0">
               <img
                 src={file.preview}
                 alt={file.name}
@@ -39,7 +39,7 @@ function FileAttachmentPreview({ files, onRemove, isDark }) {
             </div>
           ) : (
             <div
-              className="flex items-center justify-center w-10 h-10 rounded flex-shrink-0"
+              className="flex items-center justify-center w-10 h-10 rounded shrink-0"
               style={{
                 background:
                   file.type === "application/pdf"
@@ -74,7 +74,7 @@ function FileAttachmentPreview({ files, onRemove, isDark }) {
           </div>
           <button
             type="button"
-            className="flex-shrink-0 p-0.5 rounded hover:bg-opacity-20 transition-colors"
+            className="shrink-0 p-0.5 rounded"
             style={{ color: "var(--text-secondary)" }}
             onClick={() => handleRemove(index)}
             title="Xóa file"

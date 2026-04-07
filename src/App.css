@@ -1,27 +1,3 @@
-/* App.css - Using Tailwind CSS + custom styles */
-
-/* File Attachment Styles */
-.file-attachment {
-  transition: all 0.2s ease;
-}
-
-.file-attachment:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.file-attachment-image:hover {
-  transform: scale(1.01);
-}
-
-.file-attachment-pdf:hover {
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
-}
-
-/* File Preview in Input */
-.file-attachment-preview {
-  animation: slideIn 0.2s ease;
-}
-
 @keyframes slideIn {
   from {
     opacity: 0;

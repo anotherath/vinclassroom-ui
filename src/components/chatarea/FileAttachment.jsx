@@ -20,7 +20,7 @@ function FileAttachment({ attachment, isDark, onDownload }) {
   if (type === "image") {
     return (
       <div
-        className="file-attachment file-attachment-image mt-2 rounded-lg overflow-hidden border cursor-pointer max-w-md"
+        className="mt-2 rounded-lg overflow-hidden border cursor-pointer max-w-md"
         style={{
           background: "var(--card-bg)",
           borderColor: "var(--border-primary)",
@@ -56,21 +56,15 @@ function FileAttachment({ attachment, isDark, onDownload }) {
   if (type === "pdf") {
     return (
       <div
-        className="file-attachment file-attachment-pdf flex items-center gap-3 mt-2 px-3 py-3 border rounded-lg cursor-pointer max-w-md transition-colors"
+        className=" flex items-center gap-3 mt-2 px-3 py-3 border rounded-lg cursor-pointer max-w-md transition-colors"
         style={{
           background: isDark ? "var(--bg-surface-tertiary)" : "#fef2f2",
           borderColor: "var(--border-primary)",
         }}
         onClick={handleClick}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = "var(--primary)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "var(--border-primary)";
-        }}
       >
         <div
-          className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
+          className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0"
           style={{
             background: "#ef4444",
             color: "#fff",
@@ -103,7 +97,7 @@ function FileAttachment({ attachment, isDark, onDownload }) {
   // Render other file types
   return (
     <div
-      className="file-attachment file-attachment-other flex items-center gap-3 mt-2 px-3 py-3 border rounded-lg cursor-pointer max-w-md transition-colors"
+      className="flex items-center gap-3 mt-2 px-3 py-3 border rounded-lg cursor-pointer max-w-md transition-colors"
       style={{
         background: "var(--card-bg)",
         borderColor: "var(--border-primary)",

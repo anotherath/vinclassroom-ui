@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FiPaperclip } from "react-icons/fi";
 import { MessageActions, ReplyPreview, ReactionBar } from "./MessageActions";
 import { renderMessageWithMentions } from "./MessageContent";
@@ -69,7 +69,7 @@ function ChatMessage({ msg, isDark, onReply, onEdit, onShowProfile }) {
         {/* Sender name and timestamp first */}
         <div className="flex items-baseline gap-2 mb-1">
           <span
-            className="text-[13px] font-semibold cursor-pointer hover:underline"
+            className="text-[13px] font-semibold cursor-pointer"
             style={{
               color: msg.isBot ? "var(--tertiary)" : senderColor,
             }}
@@ -192,84 +192,70 @@ function ChatMessages({
 }) {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  const [isLoadingTop, setIsLoadingTop] = useState(false);
-
-  // Auto-scroll to bottom instantly on initial load and when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [chatMessages.length]);
-
-  // Scroll to bottom instantly on mount
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-    }
-  }, []);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Handle scroll event to detect when user reaches the top
-  const handleScroll = useCallback(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
+  const handleScroll = (e) => {
+    const container = e.target;
     // Check if scrolled to top (within 10px threshold)
-    if (container.scrollTop < 10 && !isLoadingTop) {
-      setIsLoadingTop(true);
+    if (container.scrollTop < 10 && !isLoadingMore) {
+      setIsLoadingMore(true);
       // Simulate loading older messages
       setTimeout(() => {
-        setIsLoadingTop(false);
+        setIsLoadingMore(false);
       }, 1500);
     }
-  }, [isLoadingTop]);
+  };
 
   return (
     <div
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto p-4 flex flex-col gap-1"
+      className="flex-1 overflow-y-auto p-4"
       onScroll={handleScroll}
     >
-      {/* Loading indicator at top */}
-      {isLoadingTop && (
-        <div className="flex items-center justify-center gap-2 py-3">
-          <div className="flex items-center gap-1">
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{
-                background: "var(--tertiary)",
-                animationDelay: "0ms",
-              }}
-            />
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{
-                background: "var(--tertiary)",
-                animationDelay: "150ms",
-              }}
-            />
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{
-                background: "var(--tertiary)",
-                animationDelay: "300ms",
-              }}
-            />
+      <div className="flex flex-col min-h-full justify-end gap-1">
+        {/* Loading indicator at top when fetching older messages */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center gap-2 py-3">
+            <div className="flex items-center gap-1">
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{
+                  background: "var(--tertiary)",
+                  animationDelay: "0ms",
+                }}
+              />
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{
+                  background: "var(--tertiary)",
+                  animationDelay: "150ms",
+                }}
+              />
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{
+                  background: "var(--tertiary)",
+                  animationDelay: "300ms",
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
-      {/* Spacer to push messages to bottom */}
-      <div className="flex-1" />
-      {chatMessages.map((msg) => (
-        <ChatMessage
-          key={msg.id}
-          msg={msg}
-          isDark={isDark}
-          onReply={onReply}
-          onEdit={onEdit}
-          onShowProfile={onShowProfile}
-        />
-      ))}
-      {isTyping && <TypingIndicator isDark={isDark} />}
-      <div ref={messagesEndRef} />
+        )}
+
+        {chatMessages.map((msg) => (
+          <ChatMessage
+            key={msg.id}
+            msg={msg}
+            isDark={isDark}
+            onReply={onReply}
+            onEdit={onEdit}
+            onShowProfile={onShowProfile}
+          />
+        ))}
+        {isTyping && <TypingIndicator isDark={isDark} />}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 }
