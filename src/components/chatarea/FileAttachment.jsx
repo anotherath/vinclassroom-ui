@@ -32,7 +32,6 @@ function FileAttachment({ attachment, isDark, onDownload }) {
             src={url}
             alt={name}
             className="w-full h-auto object-cover max-h-80"
-            loading="lazy"
             onError={(e) => {
               e.target.style.display = "none";
               const parent = e.target.parentElement;
@@ -111,7 +110,7 @@ function FileAttachment({ attachment, isDark, onDownload }) {
       }}
     >
       <div
-        className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
+        className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0"
         style={{
           background: isDark ? "var(--bg-surface-secondary)" : "#e5e7eb",
           color: "var(--text-secondary)",

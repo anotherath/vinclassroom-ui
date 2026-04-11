@@ -51,7 +51,7 @@ function ChatMessage({ msg, isDark, onReply, onEdit, onShowProfile }) {
       />
 
       <div
-        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 cursor-pointer"
+        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 cursor-pointer"
         style={{
           background: msg.isBot ? "var(--tertiary-active)" : senderColor,
           color: msg.isBot
@@ -147,7 +147,7 @@ function TypingIndicator({ isDark }) {
   return (
     <div className="flex gap-3 px-3 py-2">
       <div
-        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold shrink-0"
         style={{
           background: "var(--tertiary-active)",
           color: "var(--tertiary)",
@@ -190,7 +190,6 @@ function ChatMessages({
   onEdit,
   onShowProfile,
 }) {
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -254,7 +253,6 @@ function ChatMessages({
           />
         ))}
         {isTyping && <TypingIndicator isDark={isDark} />}
-        <div ref={messagesEndRef} />
       </div>
     </div>
   );
