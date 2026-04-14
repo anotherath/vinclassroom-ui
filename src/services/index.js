@@ -6,3 +6,4 @@ export { messageService } from "./message.service";
 export { dmService } from "./dm.service";
 export { memberService } from "./member.service";
 export { default as socketService } from "./socket.service";
+export { agentService } from "./agent.service";
