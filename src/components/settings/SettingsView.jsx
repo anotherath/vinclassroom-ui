@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { FiLogOut } from "react-icons/fi";
+import { logout } from "../../store/slices/authSlice";
 import ThemeToggle from "./ThemeToggle";
 import UserProfile from "./UserProfile";
 
 function SettingsView() {
+  const dispatch = useDispatch();
   const { isDark } = useSelector((state) => state.theme);
   const [saved, setSaved] = useState(false);
 
@@ -19,7 +21,7 @@ function SettingsView() {
       style={{ background: "var(--bg-surface)" }}
     >
       <div
-        className="px-4 py-3 border-b flex-shrink-0"
+        className="px-4 py-3 border-b shrink-0"
         style={{
           borderColor: "var(--border-primary)",
           background: "var(--bg-surface-secondary)",
@@ -103,8 +105,7 @@ function SettingsView() {
               }
               onClick={() => {
                 if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-                  localStorage.clear();
-                  window.location.reload();
+                  dispatch(logout());
                 }
               }}
             >
