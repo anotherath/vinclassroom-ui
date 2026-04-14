@@ -5,12 +5,18 @@ import RoomList from "./components/RoomList";
 import ChatArea from "./components/ChatArea";
 import MemberList from "./components/MemberList";
 import CreateSpace from "./components/createspace/CreateSpace";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
   const { activeView, activeSpace, activeRoom, searchQuery, isSettings } =
     useSelector((state) => state.app);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const currentView = isSettings ? "settings" : activeView;
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   return (
     <div className="w-screen h-screen flex overflow-hidden">
