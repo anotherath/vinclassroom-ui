@@ -10,6 +10,9 @@ export const authService = {
   // Logout
   logout: () => api.post("/auth/logout"),
 
+  // Refresh token
+  refreshToken: (refreshToken) => api.post("/auth/refresh", { refreshToken }),
+
   // Get current user profile
   getProfile: () => api.get("/auth/profile"),
 

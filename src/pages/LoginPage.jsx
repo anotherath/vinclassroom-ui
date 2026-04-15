@@ -39,7 +39,11 @@ function MicrosoftIcon({ className }) {
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    displayName: "",
+    email: "",
+    password: "",
+  });
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
 
@@ -53,13 +57,17 @@ function LoginPage() {
       dispatch(login({ email: form.email, password: form.password }));
     } else {
       dispatch(
-        register({ name: form.name, email: form.email, password: form.password })
+        register({
+          displayName: form.displayName,
+          email: form.email,
+          password: form.password,
+        }),
       );
     }
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-white via-indigo-100 to-blue-200 animate-gradient-shift">
+    <div className="relative w-full h-screen overflow-hidden bg-linear-to-br from-white via-indigo-100 to-blue-200 animate-gradient-shift">
       {/* Floating background shapes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large purple blob */}
@@ -99,7 +107,7 @@ function LoginPage() {
 
       {/* Top-left Branding */}
       <div className="absolute top-8 left-8 md:top-12 md:left-12 flex items-center gap-3 z-20">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
           V
         </div>
         <span className="text-xl font-bold text-slate-800 tracking-tight">
@@ -113,7 +121,7 @@ function LoginPage() {
         <div className="hidden lg:flex flex-col justify-center w-1/2 pr-12 xl:pr-20">
           <h1 className="text-5xl xl:text-6xl font-extrabold text-slate-900 leading-[1.1] mb-6">
             A smarter way to{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
+            <span className="bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-blue-500">
               learn, connect,
             </span>{" "}
             and grow
@@ -129,7 +137,7 @@ function LoginPage() {
               className="absolute top-0 left-0 flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/50 shadow-lg backdrop-blur-md bg-white/70 animate-float"
               style={{ animationDuration: "7s" }}
             >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-blue-400 flex items-center justify-center text-white">
+              <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-400 to-blue-400 flex items-center justify-center text-white">
                 <FiMessageCircle size={18} />
               </div>
               <div>
@@ -145,7 +153,7 @@ function LoginPage() {
               className="absolute top-20 left-36 flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/50 shadow-lg backdrop-blur-md bg-white/70 animate-float-delayed"
               style={{ animationDuration: "8s" }}
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-400 flex items-center justify-center text-white">
+              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-cyan-400 to-blue-400 flex items-center justify-center text-white">
                 <FiBookOpen size={18} />
               </div>
               <div>
@@ -161,7 +169,7 @@ function LoginPage() {
               className="absolute bottom-4 left-10 flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/50 shadow-lg backdrop-blur-md bg-white/70 animate-float-slow"
               style={{ animationDuration: "9s" }}
             >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white">
+              <div className="w-9 h-9 rounded-full bg-linear-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white">
                 <FiZap size={18} />
               </div>
               <div>
@@ -176,7 +184,7 @@ function LoginPage() {
 
         {/* Right - Glassmorphism Login Card */}
         <div className="w-full max-w-md lg:w-1/2 lg:max-w-lg">
-          <div className="backdrop-blur-xl bg-white/60 border border-white/50 shadow-2xl rounded-3xl p-8 md:p-10 transition-all hover:shadow-[0_25px_60px_-12px_rgba(99,102,241,0.25)]">
+          <div className="backdrop-blur-xl bg-white/60 border border-white/50 rounded-3xl p-8 md:p-10 transition-all shadow-[0_25px_60px_-12px_rgba(99,102,241,0.25)]">
             {/* Greeting */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900">
@@ -205,7 +213,9 @@ function LoginPage() {
                   dispatch(clearError());
                 }}
                 className={`relative z-10 flex-1 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
-                  isLogin ? "text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                  isLogin
+                    ? "text-indigo-600"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Đăng nhập
@@ -217,7 +227,9 @@ function LoginPage() {
                   dispatch(clearError());
                 }}
                 className={`relative z-10 flex-1 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
-                  !isLogin ? "text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                  !isLogin
+                    ? "text-indigo-600"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Đăng ký
@@ -237,10 +249,10 @@ function LoginPage() {
                       size={18}
                     />
                     <input
-                      name="name"
+                      name="displayName"
                       type="text"
                       required={!isLogin}
-                      value={form.name}
+                      value={form.displayName}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white/80 text-slate-800 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/50 focus:bg-white placeholder:text-slate-400"
                       placeholder="Nguyễn Văn A"
@@ -294,7 +306,11 @@ function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? (
+                      <FiEyeOff size={18} />
+                    ) : (
+                      <FiEye size={18} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -319,7 +335,7 @@ function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full py-2.5 rounded-xl text-white font-semibold text-sm shadow-lg bg-gradient-to-r from-indigo-500 to-blue-500 hover:shadow-[0_8px_24px_rgba(99,102,241,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="group relative w-full py-2.5 rounded-xl text-white font-semibold text-sm shadow-lg bg-linear-to-r from-indigo-500 to-blue-500 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {loading && <FiLoader className="animate-spin" size={18} />}
                 <span>{isLogin ? "Đăng nhập" : "Tạo tài khoản"}</span>
@@ -335,23 +351,23 @@ function LoginPage() {
             {/* Social login */}
             <div className="mt-6">
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200/80" />
-                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-medium">
+                <div className="grow border-t border-slate-200/80" />
+                <span className="shrink-0 mx-4 text-slate-400 text-xs font-medium">
                   Hoặc tiếp tục với
                 </span>
-                <div className="flex-grow border-t border-slate-200/80" />
+                <div className="grow border-t border-slate-200/80" />
               </div>
               <div className="flex gap-3 mt-4">
                 <button
                   type="button"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white/60 text-slate-700 text-sm font-medium hover:bg-white hover:border-slate-300 hover:shadow-md transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white/60 text-slate-700 text-sm font-medium hover:bg-white hover:border-slate-300  transition-all"
                 >
                   <GoogleIcon className="w-4 h-4" />
                   Google
                 </button>
                 <button
                   type="button"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white/60 text-slate-700 text-sm font-medium hover:bg-white hover:border-slate-300 hover:shadow-md transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white/60 text-slate-700 text-sm font-medium hover:bg-white hover:border-slate-300 transition-all"
                 >
                   <MicrosoftIcon className="w-4 h-4" />
                   Microsoft
@@ -359,15 +375,20 @@ function LoginPage() {
               </div>
             </div>
 
-            {isLogin && (
+            {!isLogin && (
               <div className="mt-5 text-center">
                 <p className="text-xs text-slate-400">
-                  Demo:{" "}
-                  <span className="font-medium text-slate-500">
-                    demo@vinclassroom.edu.vn
-                  </span>{" "}
-                  /{" "}
-                  <span className="font-medium text-slate-500">123456</span>
+                  Đã có tài khoản?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLogin(true);
+                      dispatch(clearError());
+                    }}
+                    className="font-medium text-indigo-500 hover:text-indigo-600"
+                  >
+                    Đăng nhập
+                  </button>
                 </p>
               </div>
             )}
