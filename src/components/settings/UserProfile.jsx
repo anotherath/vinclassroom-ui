@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
 const usernameColors = [
@@ -16,18 +16,34 @@ const usernameColors = [
 
 function UserProfile() {
   const { isDark } = useSelector((state) => state.theme);
+  const authUser = useSelector((state) => state.auth.user);
+
   const [userName, setUserName] = useState(
-    () => localStorage.getItem("userName") || "Sinh viên",
+    () => localStorage.getItem("userName") || authUser?.name || "Sinh viên",
   );
   const [userEmail, setUserEmail] = useState(
-    () => localStorage.getItem("userEmail") || "sinhvien@vinuni.edu.vn",
+    () => localStorage.getItem("userEmail") || authUser?.email || "sinhvien@vinuni.edu.vn",
   );
   const [userAvatar, setUserAvatar] = useState(
-    () => localStorage.getItem("userAvatar") || "S",
+    () => localStorage.getItem("userAvatar") || authUser?.name?.charAt(0) || "S",
   );
   const [usernameColor, setUsernameColor] = useState(
     () => localStorage.getItem("usernameColor") || "",
   );
+
+  useEffect(() => {
+    if (authUser) {
+      if (!localStorage.getItem("userName")) {
+        setUserName(authUser.name || "Sinh viên");
+      }
+      if (!localStorage.getItem("userEmail")) {
+        setUserEmail(authUser.email || "sinhvien@vinuni.edu.vn");
+      }
+      if (!localStorage.getItem("userAvatar")) {
+        setUserAvatar(authUser.name?.charAt(0) || "S");
+      }
+    }
+  }, [authUser]);
 
   const handleColorChange = (color) => {
     setUsernameColor(color);
