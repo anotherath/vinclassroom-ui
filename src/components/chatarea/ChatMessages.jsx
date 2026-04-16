@@ -182,7 +182,7 @@ function TypingIndicator({ isDark }) {
   );
 }
 
-function EmptyChatState({ dmUser, isDark }) {
+function EmptyChatState({ dmUser, isDark, hasNoSelection }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 text-center">
       <div
@@ -209,15 +209,21 @@ function EmptyChatState({ dmUser, isDark }) {
         className="text-base font-semibold mb-2"
         style={{ color: "var(--text-primary)" }}
       >
-        {dmUser ? `Bắt đầu trò chuyện với ${dmUser.name}` : "Chưa có tin nhắn nào"}
+        {hasNoSelection
+          ? "Chọn một cuộc trò chuyện"
+          : dmUser
+            ? `Bắt đầu trò chuyện với ${dmUser.name}`
+            : "Chưa có tin nhắn nào"}
       </div>
       <div
         className="text-sm leading-relaxed max-w-xs"
         style={{ color: "var(--text-muted)" }}
       >
-        {dmUser
-          ? "Hãy gửi lờii chào hoặc câu hỏi để bắt đầu cuộc trò chuyện đầu tiên nhé!"
-          : "Chọn một cuộc trò chuyện để bắt đầu nhắn tin."}
+        {hasNoSelection
+          ? "Hãy chọn một ngườii bạn bên trái để bắt đầu nhắn tin."
+          : dmUser
+            ? "Hãy gửi lờii chào hoặc câu hỏi để bắt đầu cuộc trò chuyện đầu tiên nhé!"
+            : "Chọn một cuộc trò chuyện để bắt đầu nhắn tin."}
       </div>
     </div>
   );
@@ -231,6 +237,7 @@ function ChatMessages({
   isTyping,
   onEdit,
   onShowProfile,
+  hasNoSelection,
 }) {
   const messagesContainerRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -259,7 +266,7 @@ function ChatMessages({
       onScroll={isEmpty ? undefined : handleScroll}
     >
       {isEmpty ? (
-        <EmptyChatState dmUser={dmUser} isDark={isDark} />
+        <EmptyChatState dmUser={dmUser} isDark={isDark} hasNoSelection={hasNoSelection} />
       ) : (
         <div className="flex flex-col min-h-full justify-end gap-1 w-full">
           {/* Loading indicator at top when fetching older messages */}

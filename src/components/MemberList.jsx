@@ -31,11 +31,16 @@ function MemberList({ activeView, activeRoom }) {
 
   const allRoomIds = Object.values(rooms).flat().map((r) => r.id);
   const isBotRoom = room === "tro-ly-ai";
-  const isDM = room && !allRoomIds.includes(room) && !isBotRoom;
+  const isDM = (view === "messages") || (room && !allRoomIds.includes(room) && !isBotRoom);
 
   // Build dmUser from selectedDMUser or fallback
   useEffect(() => {
-    if (!isDM || !room) {
+    if (!isDM) {
+      setDmUser(null);
+      return;
+    }
+
+    if (!room) {
       setDmUser(null);
       return;
     }
@@ -82,7 +87,7 @@ function MemberList({ activeView, activeRoom }) {
   }
 
   // DM view
-  if (isDM && dmUser) {
+  if (isDM) {
     return <DMProfile isDark={isDark} dmUser={dmUser} />;
   }
 

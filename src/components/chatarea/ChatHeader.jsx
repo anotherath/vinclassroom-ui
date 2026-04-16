@@ -64,19 +64,25 @@ function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
 }
 
 function ChatHeader({ isDark, activeRoom, isBotRoom, isDM, dmUser }) {
-  const headerTitle = isBotRoom
-    ? "Trợ lý AI"
-    : isDM && dmUser
-      ? dmUser.name
-      : `# ${activeRoom}`;
+  const hasNoSelection = isDM && !dmUser;
 
-  const headerSubtitle = isBotRoom
-    ? "Hỏi đáp với trợ lý AI"
-    : isDM && dmUser
-      ? dmUser.isOnline
-        ? "Đang hoạt động"
-        : "Ngoại tuyến"
-      : "Giải tích - tuần 1";
+  const headerTitle = hasNoSelection
+    ? "Tin nhắn"
+    : isBotRoom
+      ? "Trợ lý AI"
+      : isDM && dmUser
+        ? dmUser.name
+        : `# ${activeRoom}`;
+
+  const headerSubtitle = hasNoSelection
+    ? "Chọn một cuộc trò chuyện để bắt đầu"
+    : isBotRoom
+      ? "Hỏi đáp với trợ lý AI"
+      : isDM && dmUser
+        ? dmUser.isOnline
+          ? "Đang hoạt động"
+          : "Ngoại tuyến"
+        : "Giải tích - tuần 1";
 
   return (
     <div

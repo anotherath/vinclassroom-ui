@@ -1,6 +1,15 @@
 import SharedFile from "./SharedFile";
 import { getUserColor } from "../../utils/userColor";
-import { FiMail, FiFileText, FiInbox } from "react-icons/fi";
+import {
+  FiMail,
+  FiFileText,
+  FiInbox,
+  FiSearch,
+  FiMousePointer,
+  FiMessageCircle,
+  FiZap,
+  FiUsers,
+} from "react-icons/fi";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -66,7 +75,163 @@ function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
 }
 
 function DMProfile({ isDark, dmUser }) {
-  if (!dmUser) return null;
+  if (!dmUser) {
+    return (
+      <div
+        className="w-60 min-w-60 flex flex-col h-screen overflow-y-auto border-l"
+        style={{
+          background: "var(--bg-surface-secondary)",
+          borderColor: "var(--border-primary)",
+        }}
+      >
+        <div className="p-4 pt-5">
+          <div
+            className="text-sm font-semibold uppercase tracking-wider mb-8"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Hướng dẫn
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-3 items-center">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  color: "var(--primary)",
+                }}
+              >
+                <FiSearch size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Tìm kiếm bạn bè
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Nhập tên hoặc email để tìm
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  color: "var(--primary)",
+                }}
+              >
+                <FiMousePointer size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Chọn để nhắn tin
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Click vào tên để bắt đầu trò chuyện
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  color: "var(--primary)",
+                }}
+              >
+                <FiUsers size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Tham gia space học tập
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Vào các nhóm môn học để trao đổi
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  color: "var(--primary)",
+                }}
+              >
+                <FiZap size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Hỏi StudyBot
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Trợ lý AI sẵn sàng giải đáp 24/7
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: isDark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                  color: "var(--primary)",
+                }}
+              >
+                <FiMessageCircle size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Kết nối & học tập
+                </div>
+                <div
+                  className="text-xs mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Trao đổi bài tập và tài liệu
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

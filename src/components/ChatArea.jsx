@@ -39,7 +39,7 @@ function ChatArea({ activeView, activeRoom }) {
 
   const allRoomIds = Object.values(rooms).flat().map((r) => r.id);
   const isBotRoom = room === "tro-ly-ai";
-  const isDM = room && !allRoomIds.includes(room) && !isBotRoom;
+  const isDM = (view === "messages") || (room && !allRoomIds.includes(room) && !isBotRoom);
 
   // Build dmUser from selectedDMUser or fallback
   useEffect(() => {
@@ -123,6 +123,7 @@ function ChatArea({ activeView, activeRoom }) {
         isDark={isDark}
         chatMessages={chatMessages}
         dmUser={dmUser}
+        hasNoSelection={isDM && !dmUser}
         onReply={(msg) => {
           dispatch(setReplyTo(msg));
           dispatch(cancelEdit());

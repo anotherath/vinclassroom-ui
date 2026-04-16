@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  activeView: "space",
+  activeView: "messages",
   activeSpace: "toan-cao-cap",
-  activeRoom: "bai-giang-1",
+  activeRoom: null,
   searchQuery: "",
   isSettings: false,
 };
@@ -40,6 +40,7 @@ const appSlice = createSlice({
     },
     navigateToMessages: (state) => {
       state.activeView = "messages";
+      state.activeRoom = null;
       state.isSettings = false;
     },
     openCreateSpace: (state) => {
