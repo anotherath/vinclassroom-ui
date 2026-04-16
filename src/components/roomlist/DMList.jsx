@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { FiMessageSquare, FiUserPlus } from "react-icons/fi";
+import { FiMessageSquare, FiUserPlus, FiSearch } from "react-icons/fi";
 import { setActiveRoom } from "../../store/slices/appSlice";
 import { setSelectedDMUser } from "../../store/slices/chatSlice";
 import { getUserColor } from "../../utils/userColor";
@@ -84,6 +84,33 @@ function LoadingDots() {
         className="w-2 h-2 rounded-full animate-bounce"
         style={{ background: "var(--text-muted)", animationDelay: "300ms" }}
       />
+    </div>
+  );
+}
+
+function NoResultsState({ isDark }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center mb-3"
+        style={{
+          background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+        }}
+      >
+        <FiSearch size={24} style={{ color: "var(--text-muted)" }} />
+      </div>
+      <div
+        className="text-sm font-medium mb-1"
+        style={{ color: "var(--text-primary)" }}
+      >
+        Không tìm thấy kết quả
+      </div>
+      <div
+        className="text-xs"
+        style={{ color: "var(--text-muted)" }}
+      >
+        Thử tìm kiếm với từ khóa khác nhé
+      </div>
     </div>
   );
 }
@@ -260,12 +287,7 @@ function DMList({ activeRoom, setActiveRoom: setActiveRoomProp }) {
         )}
 
         {isSearchingActive && items.length === 0 && !isSearching && (
-          <div
-            className="text-center py-8 text-sm"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Không tìm thấy kết quả
-          </div>
+          <NoResultsState isDark={isDark} />
         )}
       </div>
     </div>

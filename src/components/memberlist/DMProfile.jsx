@@ -1,5 +1,6 @@
 import SharedFile from "./SharedFile";
 import { getUserColor } from "../../utils/userColor";
+import { FiMail, FiFileText, FiInbox } from "react-icons/fi";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -75,11 +76,9 @@ function DMProfile({ isDark, dmUser }) {
         borderColor: "var(--border-primary)",
       }}
     >
-      <div className="p-4">
-        <div
-          className="flex flex-col items-center text-center pb-4 border-b mb-4"
-          style={{ borderColor: "var(--border-primary)" }}
-        >
+      {/* Avatar + Name */}
+      <div className="p-4 text-center">
+        <div className="flex justify-center">
           <UserAvatar
             name={dmUser.name}
             avatarUrl={dmUser.avatar}
@@ -87,51 +86,82 @@ function DMProfile({ isDark, dmUser }) {
             isDark={isDark}
             isBot={dmUser.isBot}
           />
-          <div
-            className="text-base font-semibold mt-3"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {dmUser.name}
-          </div>
-          <div
-            className="text-xs mt-1 flex items-center gap-1.5"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{
-                background: dmUser.isOnline
-                  ? "var(--online)"
-                  : "var(--offline)",
-              }}
-            />
-            {dmUser.isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
-          </div>
-          {dmUser.bio && (
-            <div
-              className="text-xs mt-2 px-2"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {dmUser.bio}
-            </div>
-          )}
         </div>
         <div
-          className="pt-4 border-t"
-          style={{ borderColor: "var(--border-primary)" }}
+          className="text-base font-semibold mt-3"
+          style={{ color: "var(--text-primary)" }}
         >
-          <div
-            className="text-[11px] font-semibold uppercase tracking-wider mb-3"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Tệp chia sẻ
-          </div>
-          <SharedFile
-            isDark={isDark}
-            fileName="bai_tap_giai_tich.pdf"
-            time="10:30"
-          />
+          {dmUser.name}
         </div>
+        <div
+          className="text-xs mt-1"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {dmUser.isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div
+        className="mx-4 py-3 border-t"
+        style={{ borderColor: "var(--border-primary)" }}
+      >
+        {dmUser.email && (
+          <div className="flex items-center gap-2 py-1.5">
+            <FiMail size={14} style={{ color: "var(--text-muted)" }} />
+            <span
+              className="text-sm truncate"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {dmUser.email}
+            </span>
+          </div>
+        )}
+        {dmUser.bio && (
+          <div className="flex items-start gap-2 py-1.5">
+            <FiFileText size={14} style={{ color: "var(--text-muted)" }} />
+            <span
+              className="text-sm"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {dmUser.bio}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Shared Files */}
+      <div
+        className="mx-4 mt-2 py-3 border-t"
+        style={{ borderColor: "var(--border-primary)" }}
+      >
+        <div
+          className="text-xs font-medium mb-2"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Tệp chia sẻ
+        </div>
+        {dmUser.sharedFiles && dmUser.sharedFiles.length > 0 ? (
+          dmUser.sharedFiles.map((file, idx) => (
+            <SharedFile
+              key={idx}
+              isDark={isDark}
+              fileName={file.name}
+              time={file.time}
+              type={file.type}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <FiInbox size={24} style={{ color: "var(--text-muted)" }} />
+            <div
+              className="text-xs mt-2"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Chưa có tệp nào
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

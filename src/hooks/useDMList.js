@@ -85,6 +85,7 @@ export function useDMList() {
 
     const doSearch = async () => {
       try {
+        setSearchResults([]);
         setIsSearching(true);
         const { data } = await dmService.searchUsers(searchQuery.trim());
         if (!mounted) return;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { members, dmUsers, messages } from "../data/mockData";
+import { members, dmUsers, rooms } from "../data/mockData";
 import {
   DMProfile,
   MemberSection,
@@ -29,8 +29,9 @@ function MemberList({ activeView, activeRoom }) {
 
   const [dmUser, setDmUser] = useState(null);
 
+  const allRoomIds = Object.values(rooms).flat().map((r) => r.id);
   const isBotRoom = room === "tro-ly-ai";
-  const isDM = room && !messages[room] && !isBotRoom;
+  const isDM = room && !allRoomIds.includes(room) && !isBotRoom;
 
   // Build dmUser from selectedDMUser or fallback
   useEffect(() => {

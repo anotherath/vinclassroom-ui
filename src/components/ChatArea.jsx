@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { messages, directMessages } from "../data/mockData";
+import { messages, directMessages, rooms } from "../data/mockData";
 import { ChatHeader, ChatMessages, ChatInput } from "./chatarea/index.js";
 import { SettingsView } from "./settings/index.js";
 import { UserProfilePopup } from "./memberlist/index.js";
@@ -37,8 +37,9 @@ function ChatArea({ activeView, activeRoom }) {
 
   const [dmUser, setDmUser] = useState(null);
 
+  const allRoomIds = Object.values(rooms).flat().map((r) => r.id);
   const isBotRoom = room === "tro-ly-ai";
-  const isDM = room && !messages[room] && !isBotRoom;
+  const isDM = room && !allRoomIds.includes(room) && !isBotRoom;
 
   // Build dmUser from selectedDMUser or fallback
   useEffect(() => {
