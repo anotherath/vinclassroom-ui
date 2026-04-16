@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { FiLogOut } from "react-icons/fi";
 import { logout } from "../../store/slices/authSlice";
@@ -8,11 +8,34 @@ import UserProfile from "./UserProfile";
 function SettingsView() {
   const dispatch = useDispatch();
   const { isDark } = useSelector((state) => state.theme);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState({
+    saved: false,
+    message: "",
+    isError: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const profileRef = useRef(null);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    const result = await profileRef.current?.validateAndSave();
+    setSaving(false);
+
+    if (!result) return;
+
+    if (!result.success) {
+      if (result.error) {
+        setSaveState({ saved: true, message: result.error, isError: true });
+        setTimeout(() => setSaveState({ saved: false, message: "", isError: false }), 3000);
+      }
+      return;
+    }
+
+    const msg = result.changed
+      ? "✓ Đã cập nhật!"
+      : "✓ Đã lưu!";
+    setSaveState({ saved: true, message: msg, isError: false });
+    setTimeout(() => setSaveState({ saved: false, message: "", isError: false }), 2000);
   };
 
   return (
@@ -61,7 +84,7 @@ function SettingsView() {
             >
               Thông tin cá nhân
             </h3>
-            <UserProfile />
+            <UserProfile ref={profileRef} />
           </div>
 
           {/* About */}
@@ -123,26 +146,31 @@ function SettingsView() {
           background: "var(--bg-surface-secondary)",
         }}
       >
-        {saved && (
-          <span className="text-sm mr-auto" style={{ color: "var(--online)" }}>
-            ✓ Đã lưu!
+        {saveState.saved && (
+          <span
+            className="text-sm mr-auto"
+            style={{ color: saveState.isError ? "var(--danger)" : "var(--online)" }}
+          >
+            {saveState.message}
           </span>
         )}
         <button
           onClick={handleSave}
+          disabled={saving}
           className="px-4 py-2 rounded-md text-sm font-medium"
           style={{
-            background: "var(--primary)",
+            background: saving ? "var(--text-muted)" : "var(--primary)",
             color: isDark ? "var(--bg-surface)" : "#fff",
+            opacity: saving ? 0.7 : 1,
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "var(--primary-hover)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "var(--primary)")
-          }
+          onMouseEnter={(e) => {
+            if (!saving) e.currentTarget.style.background = "var(--primary-hover)";
+          }}
+          onMouseLeave={(e) => {
+            if (!saving) e.currentTarget.style.background = "var(--primary)";
+          }}
         >
-          Lưu thay đổi
+          {saving ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
       </div>
     </div>

@@ -51,9 +51,9 @@ function SettingsShortcuts({ isDark }) {
             Phím tắt
           </div>
           <div className="space-y-2">
-            <ShortcutItem isDark={isDark} label="Tìm kiếm" shortcut="Ctrl+K" />
             <ShortcutItem isDark={isDark} label="Cài đặt" shortcut="Ctrl+," />
             <ShortcutItem isDark={isDark} label="Dark mode" shortcut="Ctrl+D" />
+            <ShortcutItem isDark={isDark} label="Tạo space" shortcut="Ctrl+N" />
           </div>
         </div>
         <div
