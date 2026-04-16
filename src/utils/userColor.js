@@ -1,36 +1,26 @@
-// Shared user color utilities
+import { usernameColors, fallbackColors } from "../constants/usernameColors";
 
-// Predefined color palette for usernames (like Discord/Telegram)
-// Bright colors visible in both dark and light mode
-const usernameColors = [
-  "#ff6b6b", // Bright Red
-  "#ffa94d", // Bright Orange
-  "#ffd43b", // Bright Yellow
-  "#69db7c", // Bright Green
-  "#38d9a9", // Bright Teal
-  "#74c0fc", // Bright Blue
-  "#b197fc", // Bright Purple
-  "#f783ac", // Bright Pink
-  "#66d9e8", // Bright Cyan
-  "#e599f7", // Bright Rose
-  "#9775fa", // Bright Indigo
-  "#8ce99a", // Bright Mint
-  "#ffe066", // Bright Gold
-  "#a5d8ff", // Bright Sky
-  "#c4b5fd", // Bright Lavender
-  "#ff8787", // Bright Coral
-];
+// Build map from Vietnamese color names to hex codes
+const colorNameMap = Object.fromEntries(
+  usernameColors.map((c) => [c.name, c.hex])
+);
 
 /**
  * Generate a consistent color for a username
  * @param {string} name - The username
+ * @param {string} [colorName] - Optional custom color name from user profile
  * @returns {string} Hex color code
  */
-export function getUserColor(name) {
+export function getUserColor(name, colorName) {
   // Check if user has set a custom color for "You"
   if (name === "You") {
     const savedColor = localStorage.getItem("usernameColor");
-    if (savedColor) return savedColor;
+    if (savedColor) return colorNameMap[savedColor] || savedColor;
+  }
+
+  // Use the color name from user profile if available
+  if (colorName) {
+    return colorNameMap[colorName] || colorName;
   }
 
   // Generate a hash-based color for consistent assignment
@@ -38,6 +28,6 @@ export function getUserColor(name) {
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % usernameColors.length;
-  return usernameColors[index];
+  const index = Math.abs(hash) % fallbackColors.length;
+  return fallbackColors[index];
 }

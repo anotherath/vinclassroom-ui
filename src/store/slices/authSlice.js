@@ -116,6 +116,10 @@ export const logout = createAsyncThunk("auth/logout", async () => {
   clearAccessToken();
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("auth_user");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("userBio");
+  localStorage.removeItem("userAvatar");
+  localStorage.removeItem("usernameColor");
 
   try {
     authService.logout();

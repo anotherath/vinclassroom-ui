@@ -2,42 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { authService } from "../../services/auth.service";
 import { updateProfileSuccess } from "../../store/slices/authSlice";
-
-const usernameColors = [
-  { name: "Mặc định", value: "" },
-  { name: "Đỏ gạch", value: "#e57373" },
-  { name: "Cam đất", value: "#ff8a65" },
-  { name: "Vàng mù tạt", value: "#ffb74d" },
-  { name: "Vàng chanh", value: "#fff176" },
-  { name: "Xanh lá bơ", value: "#aed581" },
-  { name: "Xanh ngọc nhạt", value: "#4db6ac" },
-  { name: "Xanh dương nhạt", value: "#64b5f6" },
-  { name: "Xanh biển", value: "#4fc3f7" },
-  { name: "Tím nhạt", value: "#ba68c8" },
-  { name: "Hồng phấn", value: "#f06292" },
-  { name: "Hồng tím", value: "#e040fb" },
-  { name: "Xanh cổ vịt", value: "#26c6da" },
-  { name: "Xanh rêu", value: "#81c784" },
-  { name: "Xanh denim", value: "#7986cb" },
-  { name: "Tím oải hương", value: "#9575cd" },
-  { name: "Xám xanh", value: "#90a4ae" },
-  { name: "Nâu đất", value: "#a1887f" },
-  { name: "Đỏ san hô", value: "#ff7043" },
-  { name: "Vàng nắng", value: "#ffd54f" },
-  { name: "Xanh lá mạ", value: "#dce775" },
-  { name: "Xanh ngọc", value: "#4dd0e1" },
-  { name: "Xanh dương", value: "#42a5f5" },
-  { name: "Tím hoa cà", value: "#7e57c2" },
-  { name: "Hồng đào", value: "#ec407a" },
-  { name: "Xám bạc", value: "#b0bec5" },
-  { name: "Xanh rừng", value: "#66bb6a" },
-  { name: "Xanh biển sâu", value: "#29b6f6" },
-  { name: "Tím đậm", value: "#ab47bc" },
-  { name: "Cam neon", value: "#ffa726" },
-  { name: "Vàng tươi", value: "#ffee58" },
-  { name: "Hồng nhạt", value: "#ff8a80" },
-  { name: "Xanh ngọc bích", value: "#80cbc4" },
-];
+import { usernameColors, fallbackColors } from "../../constants/usernameColors";
 
 const UserProfile = forwardRef(function UserProfile(_, ref) {
   const { isDark } = useSelector((state) => state.theme);
@@ -54,7 +19,7 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
     () => localStorage.getItem("userBio") || authUser?.bio || "",
   );
   const [usernameColor, setUsernameColor] = useState(
-    () => localStorage.getItem("usernameColor") || "",
+    () => localStorage.getItem("usernameColor")?.toLowerCase().trim() || "",
   );
   const [nameError, setNameError] = useState("");
 
@@ -68,6 +33,11 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
       }
       if (!localStorage.getItem("userBio")) {
         setUserBio(authUser.bio || "");
+      }
+      if (!localStorage.getItem("usernameColor")) {
+        const authColor = authUser.color?.trim();
+        const matched = usernameColors.find((c) => c.name === authColor);
+        setUsernameColor(matched?.value || usernameColors[0].value);
       }
     }
   }, [authUser]);
@@ -98,7 +68,9 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
       localStorage.setItem("userName", trimmedName);
       localStorage.setItem("userAvatar", userAvatar);
       localStorage.setItem("userBio", trimmedBio);
-      localStorage.setItem("usernameColor", usernameColor);
+      if (usernameColor) {
+        localStorage.setItem("usernameColor", usernameColor);
+      }
 
       if (!hasChanged) {
         return { success: true, changed: false };
@@ -123,10 +95,11 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
     },
   }));
 
-  const handleColorChange = (color) => {
-    setUsernameColor(color);
-    localStorage.setItem("usernameColor", color);
+  const handleColorChange = (colorValue) => {
+    setUsernameColor(colorValue.trim());
   };
+
+  const currentColorName = usernameColors.find((c) => c.value === usernameColor)?.name || usernameColor;
 
   return (
     <div
@@ -137,7 +110,7 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
         <div
           className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-semibold"
           style={{
-            background: "var(--primary)",
+            background: usernameColors.find((c) => c.value === usernameColor)?.hex || "var(--primary)",
             color: isDark ? "var(--bg-surface)" : "#fff",
           }}
         >
@@ -223,15 +196,19 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
         <div className="flex flex-wrap gap-2">
           {usernameColors.map((color) => (
             <button
-              key={color.value}
+              key={`${color.value}-${usernameColor}`}
               onClick={() => handleColorChange(color.value)}
               className="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all"
               style={{
-                background: color.value || "var(--text-primary)",
+                background: color.hex,
                 borderColor:
                   usernameColor === color.value
-                    ? "var(--primary)"
+                    ? "#fff"
                     : "transparent",
+                boxShadow:
+                  usernameColor === color.value
+                    ? "0 0 0 2px var(--primary)"
+                    : "none",
                 transform:
                   usernameColor === color.value ? "scale(1.15)" : "scale(1)",
               }}
@@ -240,8 +217,9 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
               {usernameColor === color.value && (
                 <span
                   style={{
-                    color: color.value ? "#fff" : "var(--bg-surface)",
+                    color: "#fff",
                     fontSize: "14px",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.4)",
                   }}
                 >
                   ✓
@@ -250,18 +228,20 @@ const UserProfile = forwardRef(function UserProfile(_, ref) {
             </button>
           ))}
         </div>
-        <div className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
-          Màu hiện tại:{" "}
-          <span
-            style={{
-              color: usernameColor || "var(--text-primary)",
-              fontWeight: "600",
-            }}
-          >
-            {usernameColors.find((c) => c.value === usernameColor)?.name ||
-              "Mặc định"}
-          </span>
-        </div>
+        {usernameColor && (
+          <div className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
+            Màu hiện tại:{" "}
+            <span
+              style={{
+                color: usernameColors.find((c) => c.value === usernameColor)?.hex || usernameColor,
+                fontWeight: "600",
+              }}
+            >
+              {usernameColors.find((c) => c.value === usernameColor)?.name ||
+                usernameColor}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

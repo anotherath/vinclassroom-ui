@@ -48,11 +48,12 @@ function ChatArea({ activeView, activeRoom }) {
       return;
     }
 
-    if (selectedDMUser && (selectedDMUser.id === room || selectedDMUser.userId === room)) {
+    if (selectedDMUser) {
       setDmUser({
         id: selectedDMUser.id || selectedDMUser.userId,
         name: selectedDMUser.name || "Unknown",
         avatar: selectedDMUser.avatar || null,
+        color: selectedDMUser.color || null,
         isOnline: selectedDMUser.isOnline || false,
         isFriend: selectedDMUser.isFriend ?? true,
         email: selectedDMUser.email || "",
@@ -60,11 +61,12 @@ function ChatArea({ activeView, activeRoom }) {
         isBot: selectedDMUser.isBot || false,
       });
     } else {
-      // Fallback if no selectedDMUser matches
+      // Fallback if no selectedDMUser
       setDmUser({
         id: room,
         name: room,
         avatar: null,
+        color: null,
         isOnline: false,
         isFriend: false,
         email: "",

@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import SharedFile from "./SharedFile";
 import { getUserColor } from "../../utils/userColor";
+import { dmService } from "../../services/dm.service";
 import {
   FiMail,
   FiFileText,
@@ -26,19 +28,16 @@ function isEmoji(str) {
   return /\p{Emoji}/u.test(str) && str.length <= 2;
 }
 
-function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
-  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name);
-  const textColor = isBot
-    ? "var(--tertiary)"
-    : isDark
-      ? "var(--bg-surface)"
-      : "#fff";
+function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot, color }) {
+  const userColor = getUserColor(name, color);
+  console.log("color", color);
+  const textColor = isDark ? "var(--bg-surface)" : "#fff";
 
   const avatarEmoji = isEmoji(avatarUrl) ? avatarUrl : null;
   const imageUrl = avatarUrl && !avatarEmoji ? avatarUrl : null;
 
   return (
-    <div className="relative flex-shrink-0">
+    <div className="relative shrink-0">
       <div
         className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-semibold overflow-hidden"
         style={{
@@ -75,6 +74,34 @@ function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
 }
 
 function DMProfile({ isDark, dmUser }) {
+  const [profileColor, setProfileColor] = useState(null);
+
+  useEffect(() => {
+    if (!dmUser) {
+      setProfileColor(null);
+      return;
+    }
+    if (dmUser.color) {
+      setProfileColor(dmUser.color);
+      return;
+    }
+    let mounted = true;
+    dmService
+      .getUserProfile(dmUser.id)
+      .then(({ data }) => {
+        const color = data?.user?.color || data?.color || null;
+        if (mounted && color) {
+          setProfileColor(color);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [dmUser]);
+
+  const effectiveColor = dmUser?.color || profileColor || null;
+
   if (!dmUser) {
     return (
       <div
@@ -247,6 +274,7 @@ function DMProfile({ isDark, dmUser }) {
           <UserAvatar
             name={dmUser.name}
             avatarUrl={dmUser.avatar}
+            color={effectiveColor}
             isOnline={dmUser.isOnline}
             isDark={isDark}
             isBot={dmUser.isBot}
@@ -265,7 +293,6 @@ function DMProfile({ isDark, dmUser }) {
           {dmUser.isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
         </div>
       </div>
-
       {/* Info */}
       <div
         className="mx-4 py-3 border-t"
@@ -294,7 +321,6 @@ function DMProfile({ isDark, dmUser }) {
           </div>
         )}
       </div>
-
       {/* Shared Files */}
       <div
         className="mx-4 mt-2 py-3 border-t"

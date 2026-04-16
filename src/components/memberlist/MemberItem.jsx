@@ -1,40 +1,7 @@
-// MemberItem component - receives isDark as prop from parent
-
-// Same color palette as ChatMessages
-const usernameColors = [
-  "#ff6b6b",
-  "#ffa94d",
-  "#ffd43b",
-  "#69db7c",
-  "#38d9a9",
-  "#74c0fc",
-  "#b197fc",
-  "#f783ac",
-  "#66d9e8",
-  "#e599f7",
-  "#9775fa",
-  "#8ce99a",
-  "#ffe066",
-  "#a5d8ff",
-  "#c4b5fd",
-  "#ff8787",
-];
-
-function getUserColor(name) {
-  if (name === "You") {
-    const savedColor = localStorage.getItem("usernameColor");
-    if (savedColor) return savedColor;
-  }
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % usernameColors.length;
-  return usernameColors[index];
-}
+import { getUserColor } from "../../utils/userColor";
 
 function MemberItem({ isDark, member, onClick }) {
-  const memberColor = getUserColor(member.name);
+  const memberColor = getUserColor(member.name, member.color);
 
   return (
     <div

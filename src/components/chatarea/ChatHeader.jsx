@@ -15,8 +15,8 @@ function isEmoji(str) {
   return /\p{Emoji}/u.test(str) && str.length <= 2;
 }
 
-function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
-  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name);
+function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot, color }) {
+  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name, color);
   const textColor = isBot
     ? "var(--tertiary)"
     : isDark
@@ -96,6 +96,7 @@ function ChatHeader({ isDark, activeRoom, isBotRoom, isDM, dmUser }) {
         <UserAvatar
           name={isBotRoom ? "Trợ lý AI" : dmUser.name}
           avatarUrl={isBotRoom ? "🤖" : dmUser.avatar}
+          color={isBotRoom ? null : dmUser?.color}
           isOnline={isBotRoom ? true : dmUser?.isOnline}
           isDark={isDark}
           isBot={isBotRoom}

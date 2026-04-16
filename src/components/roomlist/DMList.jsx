@@ -23,8 +23,8 @@ function isEmoji(str) {
   return /\p{Emoji}/u.test(str) && str.length <= 2;
 }
 
-function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
-  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name);
+function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot, color }) {
+  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name, color);
   const textColor = isBot
     ? "var(--tertiary)"
     : isDark
@@ -162,7 +162,7 @@ function DMItem({
   onAddFriend,
   isOnline,
 }) {
-  const dmColor = getUserColor(dm.name);
+  const dmColor = getUserColor(dm.name, dm.color);
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -188,6 +188,7 @@ function DMItem({
         isOnline={isOnline}
         isDark={isDark}
         isBot={dm.isBot}
+        color={dm.color}
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
