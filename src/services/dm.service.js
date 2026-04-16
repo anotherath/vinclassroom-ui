@@ -20,6 +20,9 @@ export const dmService = {
   // Get user profile
   getUserProfile: (userId) => api.get(`/users/${userId}`),
 
+  // Get user online status
+  getUserStatus: (userId) => api.get(`/users/${userId}/status`),
+
   // Mark DM as read
   markAsRead: (userId) => api.post(`/dms/${userId}/read`),
 

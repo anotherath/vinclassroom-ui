@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { members, dmUsers } from "../data/mockData";
+import { members, dmUsers, messages } from "../data/mockData";
 import {
   DMProfile,
   MemberSection,
@@ -20,13 +21,54 @@ function MemberList({ activeView, activeRoom }) {
   const { memberSearchQuery, selectedMember } = useSelector(
     (state) => state.member,
   );
+  const { selectedDMUser } = useSelector((state) => state.chat);
   const appState = useSelector((state) => state.app);
 
   const view = activeView || appState.activeView;
   const room = activeRoom || appState.activeRoom;
 
-  const isDM = dmUsers.some((dm) => dm.id === room);
-  const dmUser = isDM ? dmUsers.find((dm) => dm.id === room) : null;
+  const [dmUser, setDmUser] = useState(null);
+
+  const isBotRoom = room === "tro-ly-ai";
+  const isDM = room && !messages[room] && !isBotRoom;
+
+  // Build dmUser from selectedDMUser or fallback
+  useEffect(() => {
+    if (!isDM || !room) {
+      setDmUser(null);
+      return;
+    }
+
+    if (selectedDMUser && (selectedDMUser.id === room || selectedDMUser.userId === room)) {
+      setDmUser({
+        id: selectedDMUser.id || selectedDMUser.userId,
+        name: selectedDMUser.name || "Unknown",
+        avatar: selectedDMUser.avatar || null,
+        isOnline: selectedDMUser.isOnline || false,
+        isFriend: selectedDMUser.isFriend ?? true,
+        email: selectedDMUser.email || "",
+        bio: selectedDMUser.bio || "",
+        isBot: selectedDMUser.isBot || false,
+      });
+    } else {
+      // Fallback to mock data or basic user
+      const mockUser = dmUsers.find((dm) => dm.id === room);
+      if (mockUser) {
+        setDmUser(mockUser);
+      } else {
+        setDmUser({
+          id: room,
+          name: room,
+          avatar: null,
+          isOnline: false,
+          isFriend: false,
+          email: "",
+          bio: "",
+          isBot: false,
+        });
+      }
+    }
+  }, [room, isDM, selectedDMUser]);
 
   // CreateSpace view
   if (view === "createSpace") {

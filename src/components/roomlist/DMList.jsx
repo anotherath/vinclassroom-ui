@@ -1,112 +1,142 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { dmUsers, pendingFriendRequests } from "../../data/mockData";
-import { FiUserPlus } from "react-icons/fi";
+import { FiMessageSquare, FiUserPlus } from "react-icons/fi";
 import { setActiveRoom } from "../../store/slices/appSlice";
+import { setSelectedDMUser } from "../../store/slices/chatSlice";
 import { getUserColor } from "../../utils/userColor";
 import { DMListHeader, DMListSection } from "./DMListComponents";
+import { useDMList } from "../../hooks/useDMList";
 
-function FriendRequestItem({
-  user,
-  isDark,
-  onAccept,
-  onDecline,
-  onNavigateToChat,
-}) {
-  const userColor = getUserColor(user.name);
-  const [isHovered, setIsHovered] = useState(false);
+function getInitials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function isEmoji(str) {
+  if (!str) return false;
+  // Basic emoji detection: any non-BMP character or common emoji ranges
+  return /\p{Emoji}/u.test(str) && str.length <= 2;
+}
+
+function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
+  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name);
+  const textColor = isBot
+    ? "var(--tertiary)"
+    : isDark
+      ? "var(--bg-surface)"
+      : "#fff";
+
+  const avatarEmoji = isEmoji(avatarUrl) ? avatarUrl : null;
+  const imageUrl = avatarUrl && !avatarEmoji ? avatarUrl : null;
 
   return (
-    <div
-      className="flex items-center px-3 py-2.5 rounded-md gap-2.5 mb-1 cursor-pointer"
-      style={{
-        background: isHovered
-          ? isDark
-            ? "rgba(255,255,255,0.05)"
-            : "rgba(0,0,0,0.03)"
-          : "transparent",
-        borderRadius: "8px",
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="relative flex-shrink-0">
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 relative cursor-pointer"
+        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden"
         style={{
           background: userColor,
-          color: isDark ? "var(--bg-surface)" : "#fff",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onNavigateToChat(user);
+          color: textColor,
         }}
       >
-        {user.avatar}
-        <div
-          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
-          style={{
-            borderColor: isDark ? "var(--bg-surface-secondary)" : "#fff",
-            background: user.isOnline ? "var(--online)" : "var(--offline)",
-          }}
-        />
+        {avatarEmoji ? (
+          <span className="text-lg">{avatarEmoji}</span>
+        ) : imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
+        ) : (
+          getInitials(name)
+        )}
       </div>
       <div
-        className="flex-1 min-w-0 cursor-pointer"
-        onClick={(e) => {
-          e.stopPropagation();
-          onNavigateToChat(user);
+        className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
+        style={{
+          borderColor: isDark ? "var(--bg-surface-secondary)" : "#fff",
+          background: isOnline ? "var(--online)" : "var(--offline)",
         }}
-      >
-        <div className="text-sm font-medium" style={{ color: userColor }}>
-          {user.name}
-        </div>
-        <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-          {user.mutualFriends} bạn chung
-        </div>
-      </div>
-      <div className="flex gap-1.5">
-        <button
-          className="w-5 h-5 flex items-center justify-center rounded transition-colors text-xs font-bold"
-          style={{
-            background: "transparent",
-            color: "var(--text-secondary)",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAccept(user);
-          }}
-          title="Chấp nhận"
-        >
-          ✓
-        </button>
-        <button
-          className="w-5 h-5 flex items-center justify-center rounded transition-colors text-xs font-bold"
-          style={{
-            background: "transparent",
-            color: "var(--text-secondary)",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDecline(user);
-          }}
-          title="Từ chối"
-        >
-          ✕
-        </button>
-      </div>
+      />
     </div>
   );
 }
 
-function DMItem({ dm, isDark, isActive, onClick, onAddFriend }) {
+function LoadingDots() {
+  return (
+    <div className="flex items-center justify-center gap-1 py-4">
+      <span
+        className="w-2 h-2 rounded-full animate-bounce"
+        style={{ background: "var(--text-muted)", animationDelay: "0ms" }}
+      />
+      <span
+        className="w-2 h-2 rounded-full animate-bounce"
+        style={{ background: "var(--text-muted)", animationDelay: "150ms" }}
+      />
+      <span
+        className="w-2 h-2 rounded-full animate-bounce"
+        style={{ background: "var(--text-muted)", animationDelay: "300ms" }}
+      />
+    </div>
+  );
+}
+
+function EmptyState({ isDark, onStartChat }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style={{
+          background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+        }}
+      >
+        <FiMessageSquare size={28} style={{ color: "var(--text-muted)" }} />
+      </div>
+      <div
+        className="text-sm font-medium mb-1"
+        style={{ color: "var(--text-primary)" }}
+      >
+        Chưa có cuộc trò chuyện nào
+      </div>
+      <div
+        className="text-xs leading-relaxed mb-4"
+        style={{ color: "var(--text-muted)" }}
+      >
+        Hãy tìm kiếm và nhắn tin với bạn bè
+        <br />
+        để bắt đầu kết nối nhé!
+      </div>
+      <button
+        onClick={onStartChat}
+        className="px-4 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer"
+        style={{
+          background: "var(--primary)",
+          color: "#fff",
+        }}
+      >
+        Tìm bạn bè
+      </button>
+    </div>
+  );
+}
+
+function DMItem({
+  dm,
+  isDark,
+  isActive,
+  onClick,
+  onAddFriend,
+  isOnline,
+}) {
   const dmColor = getUserColor(dm.name);
   const [isHovered, setIsHovered] = useState(false);
-
-  const handleClick = (e) => {
-    // Only navigate to the chat, don't show profile popup
-    console.log("hello");
-    onClick();
-  };
 
   return (
     <div
@@ -123,28 +153,15 @@ function DMItem({ dm, isDark, isActive, onClick, onAddFriend }) {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
+      onClick={onClick}
     >
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 relative"
-        style={{
-          background: dm.isBot ? "var(--tertiary-active)" : dmColor,
-          color: dm.isBot
-            ? "var(--tertiary)"
-            : isDark
-              ? "var(--bg-surface)"
-              : "#fff",
-        }}
-      >
-        {dm.avatar}
-        <div
-          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
-          style={{
-            borderColor: isDark ? "var(--bg-surface-secondary)" : "#fff",
-            background: dm.isOnline ? "var(--online)" : "var(--offline)",
-          }}
-        />
-      </div>
+      <UserAvatar
+        name={dm.name}
+        avatarUrl={dm.avatar}
+        isOnline={isOnline}
+        isDark={isDark}
+        isBot={dm.isBot}
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <div className="text-sm font-medium" style={{ color: dmColor }}>
@@ -159,61 +176,33 @@ function DMItem({ dm, isDark, isActive, onClick, onAddFriend }) {
               : "var(--text-secondary)",
           }}
         >
-          {dm.lastMessage}
+          {dm.lastMessage || (dm.isBot ? "Trợ lý AI" : "Bắt đầu trò chuyện")}
         </div>
       </div>
-      {!dm.isFriend && onAddFriend && (
-        <button
-          className="w-5 h-5 flex items-center justify-center rounded transition-colors flex-shrink-0"
-          style={{
-            background: "transparent",
-            color: "var(--text-secondary)",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddFriend(dm);
-          }}
-          title="Gửi lời mời kết bạn"
-        >
-          <FiUserPlus size={14} />
-        </button>
-      )}
     </div>
   );
 }
 
-function DMList({ activeRoom, setActiveRoom, searchQuery, setSearchQuery }) {
+function DMList({ activeRoom, setActiveRoom: setActiveRoomProp }) {
   const dispatch = useDispatch();
   const { isDark } = useSelector((state) => state.theme);
-  const [pendingRequests, setPendingRequests] = useState(pendingFriendRequests);
   const [sentRequests, setSentRequests] = useState([]);
 
-  const friends = dmUsers.filter((dm) => dm.isFriend);
-  const nonFriends = dmUsers.filter((dm) => !dm.isFriend);
-
-  const filteredFriends = friends.filter((dm) =>
-    dm.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const filteredNonFriends = nonFriends.filter((dm) =>
-    dm.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const isSearching = searchQuery.length > 0;
-
-  const handleAcceptRequest = (user) => {
-    setPendingRequests(pendingRequests.filter((u) => u.id !== user.id));
-    console.log("Accepted friend request from:", user.name);
-  };
-
-  const handleDeclineRequest = (user) => {
-    setPendingRequests(pendingRequests.filter((u) => u.id !== user.id));
-    console.log("Declined friend request from:", user.name);
-  };
+  const {
+    items,
+    onlineStatus,
+    searchQuery,
+    setSearchQuery,
+    isLoading,
+    isSearching,
+    isSearchingActive,
+    getUserOnlineStatus,
+  } = useDMList();
 
   const handleNavigateToChat = (user) => {
-    if (setActiveRoom) {
-      setActiveRoom(user.id);
+    dispatch(setSelectedDMUser(user));
+    if (setActiveRoomProp) {
+      setActiveRoomProp(user.id);
     } else {
       dispatch(setActiveRoom(user.id));
     }
@@ -223,6 +212,14 @@ function DMList({ activeRoom, setActiveRoom, searchQuery, setSearchQuery }) {
     setSentRequests([...sentRequests, user.id]);
     console.log("Sent friend request to:", user.name);
   };
+
+  const handleFocusSearch = () => {
+    const input = document.querySelector("[data-dm-search]");
+    if (input) input.focus();
+  };
+
+  const showEmpty =
+    !isLoading && !isSearching && items.length === 0 && !isSearchingActive;
 
   return (
     <div
@@ -235,113 +232,40 @@ function DMList({ activeRoom, setActiveRoom, searchQuery, setSearchQuery }) {
       <DMListHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
       <div className="flex-1 overflow-y-auto p-2 relative">
-        {/* Search Results */}
-        {isSearching && (
-          <>
-            {/* Friend matches */}
-            <DMListSection title="Bạn bè">
-              {filteredFriends.map((dm) => (
-                <DMItem
-                  key={dm.id}
-                  dm={dm}
-                  isDark={isDark}
-                  isActive={activeRoom === dm.id}
-                  onClick={() => setActiveRoom(dm.id)}
-                />
-              ))}
-            </DMListSection>
+        {isLoading && <LoadingDots />}
 
-            {/* Non-friend matches */}
-            <DMListSection title="Tin nhắn chưa kết bạn">
-              {filteredNonFriends.map((dm) => (
-                <DMItem
-                  key={dm.id}
-                  dm={dm}
-                  isDark={isDark}
-                  isActive={activeRoom === dm.id}
-                  onClick={() => setActiveRoom(dm.id)}
-                  onAddFriend={handleAddFriend}
-                />
-              ))}
-            </DMListSection>
+        {isSearching && <LoadingDots />}
 
-            {/* Friend Requests in search */}
-            <DMListSection title="Lời mời kết bạn">
-              {pendingRequests
-                .filter((user) =>
-                  user.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                )
-                .map((user) => (
-                  <FriendRequestItem
-                    key={user.id}
-                    user={user}
-                    isDark={isDark}
-                    onAccept={handleAcceptRequest}
-                    onDecline={handleDeclineRequest}
-                    onNavigateToChat={handleNavigateToChat}
-                  />
-                ))}
-            </DMListSection>
-
-            {filteredFriends.length === 0 &&
-              filteredNonFriends.length === 0 &&
-              pendingRequests.filter((user) =>
-                user.name.toLowerCase().includes(searchQuery.toLowerCase()),
-              ).length === 0 && (
-                <div
-                  className="text-center py-8 text-sm"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Không tìm thấy kết quả
-                </div>
-              )}
-          </>
+        {showEmpty && (
+          <EmptyState isDark={isDark} onStartChat={handleFocusSearch} />
         )}
 
-        {/* Default View - No Search */}
-        {!isSearching && (
-          <>
-            {/* Friends List */}
-            <DMListSection title="Bạn bè">
-              {friends.map((dm) => (
-                <DMItem
-                  key={dm.id}
-                  dm={dm}
-                  isDark={isDark}
-                  isActive={activeRoom === dm.id}
-                  onClick={() => setActiveRoom(dm.id)}
-                />
-              ))}
-            </DMListSection>
+        {!showEmpty && items.length > 0 && (
+          <DMListSection
+            title={isSearchingActive ? "Kết quả tìm kiếm" : "Tin nhắn"}
+          >
+            {items.map((dm) => (
+              <DMItem
+                key={dm.id}
+                dm={dm}
+                isDark={isDark}
+                isActive={activeRoom === dm.id}
+                onClick={() => handleNavigateToChat(dm)}
+                onAddFriend={handleAddFriend}
+                isOnline={getUserOnlineStatus(dm.userId).online}
 
-            {/* Non-friends with conversations */}
-            <DMListSection title="Tin nhắn chưa kết bạn">
-              {nonFriends.map((dm) => (
-                <DMItem
-                  key={dm.id}
-                  dm={dm}
-                  isDark={isDark}
-                  isActive={activeRoom === dm.id}
-                  onClick={() => setActiveRoom(dm.id)}
-                  onAddFriend={handleAddFriend}
-                />
-              ))}
-            </DMListSection>
+              />
+            ))}
+          </DMListSection>
+        )}
 
-            {/* Friend Requests Section */}
-            <DMListSection title="Lời mời kết bạn">
-              {pendingRequests.map((user) => (
-                <FriendRequestItem
-                  key={user.id}
-                  user={user}
-                  isDark={isDark}
-                  onAccept={handleAcceptRequest}
-                  onDecline={handleDeclineRequest}
-                  onNavigateToChat={handleNavigateToChat}
-                />
-              ))}
-            </DMListSection>
-          </>
+        {isSearchingActive && items.length === 0 && !isSearching && (
+          <div
+            className="text-center py-8 text-sm"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Không tìm thấy kết quả
+          </div>
         )}
       </div>
     </div>

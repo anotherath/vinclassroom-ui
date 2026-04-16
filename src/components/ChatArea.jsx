@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { messages, directMessages, dmUsers } from "../data/mockData";
+import { messages, directMessages } from "../data/mockData";
 import { ChatHeader, ChatMessages, ChatInput } from "./chatarea/index.js";
 import { SettingsView } from "./settings/index.js";
 import { UserProfilePopup } from "./memberlist/index.js";
@@ -13,10 +14,20 @@ import {
 } from "../store/slices/chatSlice";
 import { addMessage } from "../store/slices/messageSlice";
 
+function getInitials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function ChatArea({ activeView, activeRoom }) {
   const dispatch = useDispatch();
   const { isDark } = useSelector((state) => state.theme);
-  const { replyTo, editMessage, selectedUser } = useSelector(
+  const { replyTo, editMessage, selectedUser, selectedDMUser } = useSelector(
     (state) => state.chat,
   );
   const appState = useSelector((state) => state.app);
@@ -24,20 +35,58 @@ function ChatArea({ activeView, activeRoom }) {
   const room = activeRoom || appState.activeRoom;
   const view = activeView || appState.activeView;
 
+  const [dmUser, setDmUser] = useState(null);
+
   const isBotRoom = room === "tro-ly-ai";
-  const isDM = dmUsers.some((dm) => dm.id === room);
+  const isDM = room && !messages[room] && !isBotRoom;
+
+  // Build dmUser from selectedDMUser or fallback
+  useEffect(() => {
+    if (!isDM || !room) {
+      setDmUser(null);
+      return;
+    }
+
+    if (selectedDMUser && (selectedDMUser.id === room || selectedDMUser.userId === room)) {
+      setDmUser({
+        id: selectedDMUser.id || selectedDMUser.userId,
+        name: selectedDMUser.name || "Unknown",
+        avatar: selectedDMUser.avatar || null,
+        isOnline: selectedDMUser.isOnline || false,
+        isFriend: selectedDMUser.isFriend ?? true,
+        email: selectedDMUser.email || "",
+        bio: selectedDMUser.bio || "",
+        isBot: selectedDMUser.isBot || false,
+      });
+    } else {
+      // Fallback if no selectedDMUser matches
+      setDmUser({
+        id: room,
+        name: room,
+        avatar: null,
+        isOnline: false,
+        isFriend: false,
+        email: "",
+        bio: "",
+        isBot: false,
+      });
+    }
+  }, [room, isDM, selectedDMUser]);
+
+  // Get all user messages object to avoid creating new array in selector
+  const userMessagesMap = useSelector((state) => state.message.userMessages);
+  const userMessages = userMessagesMap[room] || [];
 
   // Get mock messages and user-sent messages
   const mockMessages = isDM ? directMessages[room] || [] : messages[room] || [];
-  const userMessages = useSelector(
-    (state) => state.message.userMessages[room] || [],
-  );
   const chatMessages = [...mockMessages, ...userMessages];
 
   const placeholder =
     isBotRoom || (isDM && room === "studybot-dm")
       ? "Hỏi trợ lý AI..."
-      : "Nhắn tin cho nhóm học...";
+      : dmUser
+        ? `Nhắn tin cho ${dmUser.name}...`
+        : "Nhắn tin cho nhóm học...";
 
   // Settings view
   if (view === "settings") {
@@ -55,6 +104,7 @@ function ChatArea({ activeView, activeRoom }) {
         activeRoom={room}
         isBotRoom={isBotRoom}
         isDM={isDM}
+        dmUser={dmUser}
       />
       {/* User Profile Popup */}
       {selectedUser && (
@@ -71,6 +121,7 @@ function ChatArea({ activeView, activeRoom }) {
       <ChatMessages
         isDark={isDark}
         chatMessages={chatMessages}
+        dmUser={dmUser}
         onReply={(msg) => {
           dispatch(setReplyTo(msg));
           dispatch(cancelEdit());
@@ -80,12 +131,10 @@ function ChatArea({ activeView, activeRoom }) {
           dispatch(cancelReply());
         }}
         onShowProfile={(senderName) => {
-          // Find user info from dmUsers or create a mock user
-          const dmUser = dmUsers.find((dm) => dm.name === senderName);
-          if (dmUser) {
+          // For DM, show the current dmUser if sender is not "You"
+          if (isDM && dmUser && senderName !== "You") {
             dispatch(setSelectedUser(dmUser));
-          } else {
-            // Create a mock user for senders not in dmUsers
+          } else if (senderName !== "You") {
             dispatch(
               setSelectedUser({
                 id: senderName.toLowerCase(),

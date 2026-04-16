@@ -182,9 +182,51 @@ function TypingIndicator({ isDark }) {
   );
 }
 
+function EmptyChatState({ dmUser, isDark }) {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 text-center">
+      <div
+        className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+        style={{
+          background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+        }}
+      >
+        <svg
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      </div>
+      <div
+        className="text-base font-semibold mb-2"
+        style={{ color: "var(--text-primary)" }}
+      >
+        {dmUser ? `Bắt đầu trò chuyện với ${dmUser.name}` : "Chưa có tin nhắn nào"}
+      </div>
+      <div
+        className="text-sm leading-relaxed max-w-xs"
+        style={{ color: "var(--text-muted)" }}
+      >
+        {dmUser
+          ? "Hãy gửi lờii chào hoặc câu hỏi để bắt đầu cuộc trò chuyện đầu tiên nhé!"
+          : "Chọn một cuộc trò chuyện để bắt đầu nhắn tin."}
+      </div>
+    </div>
+  );
+}
+
 function ChatMessages({
   isDark,
   chatMessages,
+  dmUser,
   onReply,
   isTyping,
   onEdit,
@@ -206,54 +248,62 @@ function ChatMessages({
     }
   };
 
+  const hasMessages = chatMessages.length > 0;
+
+  const isEmpty = !hasMessages && !isTyping;
+
   return (
     <div
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto p-4"
-      onScroll={handleScroll}
+      className={`flex-1 p-4 ${isEmpty ? "flex items-center justify-center overflow-hidden" : "overflow-y-auto"}`}
+      onScroll={isEmpty ? undefined : handleScroll}
     >
-      <div className="flex flex-col min-h-full justify-end gap-1">
-        {/* Loading indicator at top when fetching older messages */}
-        {isLoadingMore && (
-          <div className="flex items-center justify-center gap-2 py-3">
-            <div className="flex items-center gap-1">
-              <div
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{
-                  background: "var(--tertiary)",
-                  animationDelay: "0ms",
-                }}
-              />
-              <div
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{
-                  background: "var(--tertiary)",
-                  animationDelay: "150ms",
-                }}
-              />
-              <div
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{
-                  background: "var(--tertiary)",
-                  animationDelay: "300ms",
-                }}
-              />
+      {isEmpty ? (
+        <EmptyChatState dmUser={dmUser} isDark={isDark} />
+      ) : (
+        <div className="flex flex-col min-h-full justify-end gap-1 w-full">
+          {/* Loading indicator at top when fetching older messages */}
+          {isLoadingMore && (
+            <div className="flex items-center justify-center gap-2 py-3">
+              <div className="flex items-center gap-1">
+                <div
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{
+                    background: "var(--tertiary)",
+                    animationDelay: "0ms",
+                  }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{
+                    background: "var(--tertiary)",
+                    animationDelay: "150ms",
+                  }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{
+                    background: "var(--tertiary)",
+                    animationDelay: "300ms",
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {chatMessages.map((msg) => (
-          <ChatMessage
-            key={msg.id}
-            msg={msg}
-            isDark={isDark}
-            onReply={onReply}
-            onEdit={onEdit}
-            onShowProfile={onShowProfile}
-          />
-        ))}
-        {isTyping && <TypingIndicator isDark={isDark} />}
-      </div>
+          {chatMessages.map((msg) => (
+            <ChatMessage
+              key={msg.id}
+              msg={msg}
+              isDark={isDark}
+              onReply={onReply}
+              onEdit={onEdit}
+              onShowProfile={onShowProfile}
+            />
+          ))}
+          {isTyping && <TypingIndicator isDark={isDark} />}
+        </div>
+      )}
     </div>
   );
 }

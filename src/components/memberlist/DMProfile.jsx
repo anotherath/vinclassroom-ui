@@ -1,4 +1,68 @@
 import SharedFile from "./SharedFile";
+import { getUserColor } from "../../utils/userColor";
+
+function getInitials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function isEmoji(str) {
+  if (!str) return false;
+  return /\p{Emoji}/u.test(str) && str.length <= 2;
+}
+
+function UserAvatar({ name, avatarUrl, isOnline, isDark, isBot }) {
+  const userColor = isBot ? "var(--tertiary-active)" : getUserColor(name);
+  const textColor = isBot
+    ? "var(--tertiary)"
+    : isDark
+      ? "var(--bg-surface)"
+      : "#fff";
+
+  const avatarEmoji = isEmoji(avatarUrl) ? avatarUrl : null;
+  const imageUrl = avatarUrl && !avatarEmoji ? avatarUrl : null;
+
+  return (
+    <div className="relative flex-shrink-0">
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-semibold overflow-hidden"
+        style={{
+          background: userColor,
+          color: textColor,
+        }}
+      >
+        {avatarEmoji ? (
+          <span className="text-3xl">{avatarEmoji}</span>
+        ) : imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
+        ) : (
+          getInitials(name)
+        )}
+      </div>
+      {!isBot && (
+        <div
+          className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2"
+          style={{
+            borderColor: isDark ? "var(--bg-surface-secondary)" : "#fff",
+            background: isOnline ? "var(--online)" : "var(--offline)",
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
 function DMProfile({ isDark, dmUser }) {
   if (!dmUser) return null;
@@ -16,31 +80,15 @@ function DMProfile({ isDark, dmUser }) {
           className="flex flex-col items-center text-center pb-4 border-b mb-4"
           style={{ borderColor: "var(--border-primary)" }}
         >
+          <UserAvatar
+            name={dmUser.name}
+            avatarUrl={dmUser.avatar}
+            isOnline={dmUser.isOnline}
+            isDark={isDark}
+            isBot={dmUser.isBot}
+          />
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-semibold mb-3 relative"
-            style={{
-              background: dmUser.isBot
-                ? "var(--tertiary-active)"
-                : "var(--primary)",
-              color: dmUser.isBot
-                ? "var(--tertiary)"
-                : isDark
-                  ? "var(--bg-surface)"
-                  : "#fff",
-            }}
-          >
-            {dmUser.avatar}
-            <div
-              className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full"
-              style={{
-                background: dmUser.isOnline
-                  ? "var(--online)"
-                  : "var(--offline)",
-              }}
-            />
-          </div>
-          <div
-            className="text-base font-semibold"
+            className="text-base font-semibold mt-3"
             style={{ color: "var(--text-primary)" }}
           >
             {dmUser.name}
@@ -59,6 +107,14 @@ function DMProfile({ isDark, dmUser }) {
             />
             {dmUser.isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
           </div>
+          {dmUser.bio && (
+            <div
+              className="text-xs mt-2 px-2"
+              style={{ color: "var(--text-muted)" }}
+            >
+              {dmUser.bio}
+            </div>
+          )}
         </div>
         <div
           className="pt-4 border-t"

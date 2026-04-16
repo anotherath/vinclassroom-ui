@@ -1,7 +1,21 @@
+import { useState, useEffect } from "react";
+
 /**
  * Header section for DMList with title and search
  */
 export function DMListHeader({ searchQuery, setSearchQuery }) {
+  const [inputValue, setInputValue] = useState(searchQuery);
+
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setSearchQuery(inputValue.trim());
+    }
+  };
+
   return (
     <div
       className="p-4 border-b"
@@ -24,8 +38,10 @@ export function DMListHeader({ searchQuery, setSearchQuery }) {
           color: "var(--input-text)",
         }}
         placeholder="Tìm kiếm bạn bè..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        data-dm-search
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
     </div>
   );
